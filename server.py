@@ -159,7 +159,7 @@ def fetch_rows(cursor):
 
 
 def init_db():
-    UPLOAD_DIR.mkdir(exist_ok=True)
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     conn = connect()
     try:
         cur = conn.cursor()
