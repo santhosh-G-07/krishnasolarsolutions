@@ -285,6 +285,26 @@ a {
   z-index: 3;
 }
 
+.hero-title {
+  color: var(--white);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.1rem, 1.75vw, 1.45rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.hero-subtitle {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: clamp(1rem, 1.3vw, 1.16rem);
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 540px;
+  text-shadow: 0 5px 20px rgba(0, 0, 0, 0.36);
+}
+
 .quote-panel.changing {
   animation: quoteSwap 0.72s ease;
 }
