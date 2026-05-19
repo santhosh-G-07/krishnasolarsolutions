@@ -97,6 +97,50 @@ python server.py
 
 The chatbot UI in `chatbot.js` calls `/api/chatbot`, which is handled by `server.py`.
 
+## Using Supabase Postgres
+
+This project can use either plain `PG_*` variables or a hosted Postgres connection string.
+
+For Supabase, the easiest setup is:
+
+```powershell
+$env:DATABASE_URL="postgresql://..."
+$env:PG_SSLMODE="require"
+python server.py
+```
+
+For long-running backend apps, Supabase recommends using its connection string from the `Session pooler` / pooled connection settings.
+
+## Railway + Supabase
+
+This repo includes a [railway.toml](/E:/ksssss/kss/railway.toml) file so Railway starts the app with:
+
+```bash
+python server.py
+```
+
+Recommended Railway variables:
+
+```text
+HOST=0.0.0.0
+DATABASE_URL=postgresql://...
+PG_SSLMODE=require
+ADMIN_EMAIL=you@example.com
+NOTIFICATION_EMAIL=you@example.com
+MAIL_USERNAME=your-gmail@gmail.com
+MAIL_PASSWORD=your-gmail-app-password
+MAIL_FROM=your-gmail@gmail.com
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_STARTTLS=True
+MAIL_SSL_TLS=False
+GEMINI_API_KEY=...
+GEMINI_MODEL=gemini-2.5-flash
+UPLOAD_DIR=/data/uploads
+```
+
+If you keep document uploads on Railway, attach a Volume and mount it to `/data`.
+
 ## Hosting + Domain
 
 Recommended: host this as one backend service (Python) because it already serves both API and frontend HTML/CSS/JS.

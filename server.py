@@ -53,6 +53,9 @@ def env_bool(key, default=False):
     return str(value).strip().lower() in {"1", "true", "yes", "on"}
 
 
+UPLOAD_DIR = Path(env_first("UPLOAD_DIR", default=str(UPLOAD_DIR))).resolve()
+
+
 def smtp_settings():
     smtp_user = env_first("MAIL_USERNAME", "SMTP_USER")
     smtp_pass = env_first("MAIL_PASSWORD", "SMTP_PASS")
@@ -116,14 +119,32 @@ def verify_password(password, stored):
 
 
 def connect():
-    conn = psycopg2.connect(
-        host=os.environ.get("PG_HOST", "localhost"),
-        port=int(os.environ.get("PG_PORT", "5433")),
-        dbname=os.environ.get("PG_DB", "kss_db"),
-        user=os.environ.get("PG_USER", "kss_user"),
-        password=os.environ.get("PG_PASSWORD", ""),
-        cursor_factory=psycopg2.extras.RealDictCursor,
-    )
+    database_url = env_first("DATABASE_URL", "PG_DATABASE_URL")
+    connect_kwargs = {
+        "cursor_factory": psycopg2.extras.RealDictCursor,
+    }
+    sslmode = env_first("PG_SSLMODE")
+    sslrootcert = env_first("PG_SSLROOTCERT")
+
+    if database_url:
+        connect_kwargs["dsn"] = database_url
+    else:
+        connect_kwargs.update(
+            {
+                "host": os.environ.get("PG_HOST", "localhost"),
+                "port": int(os.environ.get("PG_PORT", "5432")),
+                "dbname": os.environ.get("PG_DB", "kss_db"),
+                "user": os.environ.get("PG_USER", "kss_user"),
+                "password": os.environ.get("PG_PASSWORD", ""),
+            }
+        )
+
+    if sslmode:
+        connect_kwargs["sslmode"] = sslmode
+    if sslrootcert:
+        connect_kwargs["sslrootcert"] = sslrootcert
+
+    conn = psycopg2.connect(**connect_kwargs)
     conn.autocommit = False
     return conn
 
