@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KSS – Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--g:#0d4a2a;--g2:#1a7a45;--g3:#d4f0df;--g4:#f0faf4;--bl:#185fa5;--bl2:#e6eef9;--am:#92400e;--am2:#fef3c7;--rd:#991b1b;--rd2:#fee2e2;--pu:#5b21b6;--pu2:#ede9fe;--cr:#faf8f3;--br:#c8dfd1;--br2:#e5e7eb;--tx:#0f1f14;--tx2:#3d5c48;--tx3:#7a9b85;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--cr);color:var(--tx);font-size:14px}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:230px;background:var(--g);flex-shrink:0;display:flex;flex-direction:column}
+.sb-logo{padding:1.2rem;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px}
+.sb-logo .logo-img{width:38px;height:38px;border-radius:9px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center}
+.sb-logo .logo-img img{width:100%;height:100%;object-fit:cover;display:block}
+.sb-logo .logo-text{min-width:0;flex:1}
+.sb-logo .brand{font-family:'Fraunces',serif;font-size:16px;color:#fff;font-weight:700;line-height:1.1}
+.sb-logo .sub{font-size:10px;color:rgba(255,255,255,.55);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-logo .abadge{display:inline-block;margin-top:6px;font-size:9px;background:rgba(255,255,255,.15);color:#fff;padding:2px 7px;border-radius:20px;letter-spacing:.05em}
+.user-section{position:relative}
+.sb-user{padding:.85rem 1.1rem;border:none;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px;width:100%;background:transparent;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:left;transition:background .15s}
+.sb-user:hover{background:rgba(255,255,255,.06)}
+.sb-user.open{background:rgba(255,255,255,.08)}
+.sb-user .u-info{min-width:0;flex:1}
+.sb-user .chev{flex-shrink:0;opacity:.55;color:#fff;transition:transform .15s}
+.sb-user.open .chev{transform:rotate(180deg);opacity:1}
+.u-name,.u-role{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.profile-menu{position:absolute;left:.5rem;top:calc(100% + 4px);min-width:248px;background:#fff;border-radius:12px;box-shadow:0 16px 40px rgba(0,0,0,.18);padding:.45rem;z-index:60;display:none;border:1px solid var(--br)}
+.profile-menu.open{display:block;animation:pmIn .14s ease-out}
+@keyframes pmIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.profile-menu .pm-head{padding:.65rem .75rem .55rem;border-bottom:1px solid var(--br2);margin-bottom:.35rem}
+.profile-menu .pm-head .pm-n{font-size:13px;font-weight:500;color:var(--tx)}
+.profile-menu .pm-head .pm-r{font-size:11px;color:var(--tx3);margin-top:1px}
+.profile-menu button{width:100%;text-align:left;padding:.5rem .65rem;border:none;background:transparent;font-size:13px;color:var(--tx);cursor:pointer;display:flex;align-items:center;gap:10px;border-radius:7px;font-family:'DM Sans',sans-serif;transition:background .1s}
+.profile-menu button:hover{background:var(--g4);color:var(--g)}
+.profile-menu .pm-ic{font-size:14px;width:20px;text-align:center;opacity:.85}
+.profile-menu .pm-badge{margin-left:auto;background:var(--rd);color:#fff;font-size:10px;padding:1px 7px;border-radius:10px;font-weight:500;min-width:18px;text-align:center}
+.profile-menu .pm-badge:empty{display:none}
+.profile-menu .pm-sep{height:1px;background:var(--br2);margin:.35rem .25rem}
+.profile-menu .pm-logout{color:var(--rd)}
+.profile-menu .pm-logout:hover{background:var(--rd2);color:var(--rd)}
+/* lists in modals */
+.list{display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow-y:auto}
+.li{border:1px solid var(--br);border-radius:10px;padding:.7rem .85rem;background:#fff;display:flex;gap:10px;align-items:flex-start}
+.li.unread{background:#fff8e8;border-color:#fde68a}
+.li-ico{width:32px;height:32px;border-radius:8px;background:var(--g4);color:var(--g);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.li-body{flex:1;min-width:0}
+.li-t{font-size:13px;font-weight:500;margin-bottom:2px}
+.li-s{font-size:12px;color:var(--tx2);line-height:1.45}
+.li-time{font-size:11px;color:var(--tx3);margin-top:4px}
+.li-meta{font-size:11px;color:var(--tx3);flex-shrink:0;text-align:right}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1rem}
+.kpi{background:var(--g4);border:1px solid var(--g3);border-radius:10px;padding:.75rem .9rem;text-align:center}
+.kpi-v{font-size:22px;font-weight:500;color:var(--g);line-height:1.1}
+.kpi-l{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+.report-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.r-card{background:#fff;border:1px solid var(--br);border-radius:12px;padding:1rem 1.25rem}
+.r-card h3{font-size:12px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem;font-weight:500}
+.bar-row{display:flex;align-items:center;gap:10px;font-size:12px;margin-bottom:6px}
+.bar-row .bar-l{flex:0 0 100px;color:var(--tx2);font-weight:500}
+.bar-row .bar-w{flex:1;height:8px;background:var(--g4);border-radius:99px;overflow:hidden}
+.bar-row .bar-f{height:100%;background:var(--g2);border-radius:99px;transition:width .4s}
+.bar-row .bar-c{flex:0 0 36px;text-align:right;color:var(--g);font-weight:500}
+/* profile photo */
+.photo-row{display:flex;align-items:center;gap:18px;margin-bottom:1.25rem;padding:1rem;background:var(--g4);border-radius:12px;border:1px solid var(--g3)}
+.photo-prev{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--g2));color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;flex-shrink:0;overflow:hidden;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.photo-prev img{width:100%;height:100%;object-fit:cover}
+.photo-actions{display:flex;flex-direction:column;gap:6px;flex:1}
+.photo-actions .btn{justify-content:center}
+.photo-hint{font-size:11px;color:var(--tx3);margin-top:2px}
+/* avatar in sidebar with photo */
+.av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.sb-user .av{overflow:hidden}
+/* row action with link */
+.field-row{display:flex;gap:8px;align-items:flex-end}
+.field-row .field{flex:1}
+.linkbtn{background:none;border:none;color:var(--g);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;padding:9px 0;white-space:nowrap}
+.linkbtn:hover{color:var(--g2)}
+/* OTP code input */
+.otp-grid{display:flex;gap:8px;justify-content:center;margin:1rem 0}
+.otp-grid input{width:42px;height:48px;text-align:center;font-size:18px;font-weight:600;border:1px solid var(--br);border-radius:8px;background:var(--g4);outline:none;font-family:'DM Sans',sans-serif}
+.otp-grid input:focus{border-color:var(--g2);background:#fff}
+.otp-step{display:none}
+.otp-step.active{display:block}
+.otp-note{font-size:12px;color:var(--tx2);background:var(--g4);border:1px dashed var(--g3);border-radius:8px;padding:10px 14px;line-height:1.55;margin-bottom:1rem}
+.otp-note.warn{background:#fff7ed;border-color:#fed7aa;color:#92400e}
+.chip{display:inline-block;font-size:11px;background:var(--g3);color:var(--g);padding:2px 8px;border-radius:20px;font-weight:500;margin-left:6px}
+.av{width:34px;height:34px;border-radius:50%;background:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0}
+.u-name{font-size:12px;color:#fff;font-weight:500}.u-role{font-size:10px;color:rgba(255,255,255,.5)}
+nav.side{padding:.6rem 0;flex:1}
+.ns{font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,.35);padding:.7rem 1.2rem .2rem;text-transform:uppercase}
+.ni{display:flex;align-items:center;gap:10px;padding:.6rem 1.2rem;font-size:13px;color:rgba(255,255,255,.7);cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:background .15s}
+.ni:hover{background:rgba(255,255,255,.08);color:#fff}
+.ni.active{background:rgba(255,255,255,.15);color:#fff;font-weight:500}
+.ni svg{width:16px;height:16px;flex-shrink:0;opacity:.7}.ni.active svg{opacity:1}
+.sb-bot{padding:1rem 1.2rem;border-top:1px solid rgba(255,255,255,.1);margin-top:auto}
+.sb-bot button{width:100%;padding:8px;border-radius:8px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border:none;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif}
+.sb-bot button:hover{background:rgba(255,255,255,.2);color:#fff}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:#fff;border-bottom:1px solid var(--br);padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.topbar-title{font-size:16px;font-weight:500}
+.btn{padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn-primary{background:var(--g);color:#fff}.btn-primary:hover{background:var(--g2)}
+.btn-primary:disabled{background:#999;cursor:not-allowed}
+.btn-outline{background:#fff;color:var(--tx2);border:1px solid var(--br)}.btn-outline:hover{background:var(--cr)}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
+.btn-danger{background:var(--rd2);color:var(--rd);border:1px solid #fca5a5}.btn-danger:hover{background:#fecaca}
+.btn-exp{background:var(--bl2);color:var(--bl);border:1px solid #bfdbfe}
+.content{padding:1.5rem;overflow-y:auto;flex:1}
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;margin-bottom:1.5rem}
+.stat{background:#fff;border:1px solid var(--br);border-radius:12px;padding:1rem 1.25rem}
+.stat-val{font-size:24px;font-weight:500;margin-bottom:2px}
+.stat-lbl{font-size:12px;color:var(--tx3)}
+.sv .stat-val{color:var(--g)}.sb .stat-val{color:var(--bl)}.sa .stat-val{color:var(--am)}.sr .stat-val{color:var(--rd)}.sp .stat-val{color:var(--pu)}
+.ecards{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem}
+.ecard{background:#fff;border:1px solid var(--br);border-radius:12px;padding:1.25rem}
+.ech{display:flex;align-items:center;gap:10px;margin-bottom:.75rem}
+.eav{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0}
+.en{font-size:14px;font-weight:500}
+.er{font-size:11px;color:var(--tx3)}
+.estats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:.75rem}
+.estat{background:var(--g4);border-radius:8px;padding:8px 10px;text-align:center}
+.estat-val{font-size:17px;font-weight:500;color:var(--g)}
+.estat-lbl{font-size:10px;color:var(--tx3)}
+.table-wrap{background:#fff;border:1px solid var(--br);border-radius:14px;overflow:hidden;margin-bottom:1.5rem}
+.table-header{padding:.85rem 1.25rem;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.sbox{display:flex;align-items:center;gap:8px;background:var(--g4);border:1px solid var(--br);border-radius:8px;padding:7px 12px;flex:1;max-width:260px}
+.sbox input{border:none;background:transparent;outline:none;font-size:13px;width:100%;font-family:'DM Sans',sans-serif;color:var(--tx)}
+select.fsel{padding:7px 10px;border:1px solid var(--br);border-radius:8px;font-size:13px;background:var(--g4);color:var(--tx);font-family:'DM Sans',sans-serif;outline:none}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--g4)}
+th{padding:.65rem 1rem;text-align:left;font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+td{padding:.7rem 1rem;font-size:13px;border-bottom:1px solid var(--br2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f9fafb}
+.badge{display:inline-block;font-size:10px;padding:3px 9px;border-radius:20px;font-weight:500}
+.bg-green{background:var(--g3);color:var(--g)}.bg-blue{background:var(--bl2);color:var(--bl)}
+.bg-amber{background:var(--am2);color:var(--am)}.bg-red{background:var(--rd2);color:var(--rd)}.bg-gray{background:#f3f4f6;color:#4b5563}
+.mb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center}
+.mb.open{display:flex}
+.modal{background:#fff;border-radius:18px;width:740px;max-width:96vw;max-height:90vh;overflow-y:auto}
+.mh{padding:1.2rem 1.5rem;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2}
+.mh h2{font-size:17px;font-weight:500}
+.mbody{padding:1.5rem}
+.mclose{background:none;border:none;font-size:22px;cursor:pointer;color:var(--tx3);line-height:1}
+.mfoot{padding:1rem 1.5rem;border-top:1px solid var(--br);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:#fff}
+.fs{margin-bottom:1.5rem}
+.fst{font-size:11px;font-weight:500;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--g3)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:.875rem}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--tx2);margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1px solid var(--br);border-radius:8px;font-size:13px;color:var(--tx);background:var(--g4);font-family:'DM Sans',sans-serif;outline:none;transition:border .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--g2);background:#fff}
+.field textarea{resize:vertical;min-height:75px}
+.ff{grid-column:1/-1}
+.fu{border:2px dashed var(--br);border-radius:10px;padding:1.25rem;text-align:center;cursor:pointer;background:var(--g4);transition:all .2s}
+.fu:hover{border-color:var(--g2);background:#e8f5ed}
+.fu input{display:none}
+.flist{margin-top:.75rem;display:flex;flex-direction:column;gap:6px}
+.fitem{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--br);border-radius:7px;padding:7px 10px;font-size:12px}
+.fitem-nm{flex:1}
+.fitem-rm{background:none;border:none;color:var(--rd);cursor:pointer;font-size:16px;line-height:1}
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.dc{background:#fff;border:1px solid var(--br);border-radius:12px;padding:1rem 1.25rem}
+.dct{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:.75rem}
+.dr2{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid var(--br2);font-size:13px;gap:8px}
+.dr2:last-child{border-bottom:none}
+.dl{color:var(--tx3);flex-shrink:0}
+.dv{font-weight:500;text-align:right}
+#ls{position:fixed;inset:0;background:var(--cr);display:flex;align-items:center;justify-content:center;z-index:200}
+.lcard{background:#fff;border:1px solid var(--br);border-radius:20px;padding:2.5rem;width:400px;max-width:95vw}
+.l-logo{font-family:'Fraunces',serif;font-size:32px;font-weight:700;color:var(--g);margin-bottom:.25rem}
+.l-sub{font-size:13px;color:var(--tx3);margin-bottom:1.75rem}
+.l-hint{margin-top:1rem;font-size:11px;color:var(--tx3);text-align:center;background:var(--g4);border:1px dashed var(--br);border-radius:8px;padding:8px 10px;line-height:1.5}
+.l-hint code{background:#fff;padding:1px 6px;border-radius:4px;border:1px solid var(--br);color:var(--g);font-size:11px}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--g);color:#fff;padding:.75rem 1.25rem;border-radius:10px;font-size:13px;z-index:999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.toast.err{background:var(--rd)}.toast.show{display:block}
+.empty{text-align:center;padding:3rem 1rem;color:var(--tx3)}
+.tabs-bar{display:flex;gap:4px;background:#fff;border:1px solid var(--br);border-radius:10px;padding:4px;margin-bottom:1.25rem;width:fit-content}
+.tab{padding:6px 14px;border-radius:7px;font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--tx3);font-family:'DM Sans',sans-serif;transition:all .15s}
+.tab.active{background:var(--g);color:#fff;font-weight:500}
+.sec-title{font-size:13px;font-weight:500;margin-bottom:.75rem;color:var(--tx2)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="ls">
+  <div class="lcard">
+    <div class="l-logo">KSS</div>
+    <div class="l-sub">Admin login — Krishna Solar Solutions</div>
+    <div class="field" style="margin-bottom:.875rem">
+      <label>Admin username / phone</label>
+      <input type="text" id="lu" placeholder="admin"/>
+    </div>
+    <div class="field" style="margin-bottom:1.25rem">
+      <label>Password</label>
+      <input type="password" id="lp" placeholder="Admin password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:11px;font-size:14px" onclick="doLogin()" id="lbtn">Login as Admin</button>
+    <div id="lerr" style="color:var(--rd);font-size:12px;margin-top:.75rem;text-align:center;display:none"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="shell" id="app" style="display:none">
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="logo-img"><img src="assets/kss-logo.jpeg" alt="KSS"/></div>
+      <div class="logo-text">
+        <div class="brand">Krishna Solar</div>
+        <div class="sub">Admin Panel</div>
+      </div>
+    </div>
+    <div class="user-section">
+      <button class="sb-user" id="userBtn" onclick="toggleProfileMenu(event)" aria-haspopup="true" aria-expanded="false">
+        <div class="av" id="aav">KO</div>
+        <div class="u-info">
+          <div class="u-name" id="aname">Admin</div>
+          <div class="u-role" id="arole">Administrator</div>
+        </div>
+        <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="profile-menu" id="profileMenu" role="menu">
+        <div class="pm-head">
+          <div class="pm-n" id="pmName">Admin</div>
+          <div class="pm-r" id="pmRole">Administrator</div>
+        </div>
+        <button onclick="pmClick('profile')"><span class="pm-ic">👤</span>My Profile</button>
+        <button onclick="pmClick('company')"><span class="pm-ic">🏢</span>Company Settings</button>
+        <button onclick="pmClick('notif')"><span class="pm-ic">🔔</span>Notifications<span class="pm-badge" id="pmNotifCount"></span></button>
+        <button onclick="pmClick('activity')"><span class="pm-ic">📋</span>Activity Logs</button>
+        <button onclick="pmClick('emps')"><span class="pm-ic">👨‍💼</span>Manage Employees</button>
+        <button onclick="pmClick('reports')"><span class="pm-ic">📊</span>Reports</button>
+        <button onclick="pmClick('prefs')"><span class="pm-ic">⚙️</span>Preferences</button>
+        <div class="pm-sep"></div>
+        <button class="pm-logout" onclick="pmClick('logout')"><span class="pm-ic">🚪</span>Logout</button>
+      </div>
+    </div>
+    <nav class="side">
+      <div class="ns">Overview</div>
+      <button class="ni active" onclick="pg('dash',this)">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </button>
+      <div class="ns">Applications</div>
+      <button class="ni" onclick="pg('apps',this)">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-5-5M9 20H4v-2a4 4 0 015-5m6-5a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        All Applications
+      </button>
+      <button class="ni" onclick="openAdd()">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Add Application
+      </button>
+      <div class="ns">Team</div>
+      <button class="ni" onclick="pg('emps',this)">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        Employees
+      </button>
+    </nav>
+    <div class="sb-bot"><button onclick="logout()">Logout</button></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="ptitle">Dashboard</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-exp" onclick="toast('Connect backend to generate Excel/PDF export')">↓ Export</button>
+        <button class="btn btn-primary" onclick="openAdd()">+ Add Application</button>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div id="pg-dash">
+        <div class="stats-row">
+          <div class="stat sv"><div class="stat-val" id="s1">—</div><div class="stat-lbl">Total applications</div></div>
+          <div class="stat sb"><div class="stat-val" id="s2">—</div><div class="stat-lbl">This month</div></div>
+          <div class="stat sa"><div class="stat-val" id="s3">—</div><div class="stat-lbl">In progress</div></div>
+          <div class="stat sr"><div class="stat-val" id="s4">—</div><div class="stat-lbl">Pending</div></div>
+          <div class="stat sp"><div class="stat-val" id="s5">—</div><div class="stat-lbl">Employees</div></div>
+        </div>
+        <div class="sec-title">Employee-wise breakdown</div>
+        <div class="ecards" id="ecards"></div>
+        <div class="sec-title">Recent applications</div>
+        <div class="table-wrap" id="recent-wrap"></div>
+      </div>
+
+      <!-- ALL APPLICATIONS -->
+      <div id="pg-apps" style="display:none">
+        <div class="tabs-bar">
+          <button class="tab active" onclick="atab(this,'all')">All</button>
+          <button class="tab" onclick="atab(this,'Applied')">Applied</button>
+          <button class="tab" onclick="atab(this,'In Progress')">In Progress</button>
+          <button class="tab" onclick="atab(this,'Completed')">Completed</button>
+        </div>
+        <div class="table-wrap">
+          <div class="table-header">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;flex:1">
+              <div class="sbox"><svg width="14" height="14" fill="none" stroke="#7a9b85" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+                <input type="text" id="asrch" placeholder="Search name, phone, district..." oninput="renderApps()"/>
+              </div>
+              <select class="fsel" id="empfilter" onchange="renderApps()"><option value="">All Employees</option></select>
+            </div>
+          </div>
+          <table><thead><tr><th>Customer</th><th>Phone</th><th>District</th><th>Service</th><th>Status</th><th>Employee</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="atbody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- EMPLOYEES -->
+      <div id="pg-emps" style="display:none">
+        <div class="table-wrap">
+          <div class="table-header">
+            <span style="font-size:14px;font-weight:500">Employee List</span>
+            <button class="btn btn-primary btn-sm" onclick="openAddEmp()">+ Add Employee</button>
+          </div>
+          <table><thead><tr><th>Employee</th><th>Phone</th><th>Job Title</th><th>Last Login</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="etbody"></tbody></table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ADD APPLICATION MODAL -->
+<div class="mb" id="add-modal">
+  <div class="modal">
+    <div class="mh"><h2 id="addtitle">New Application</h2><button class="mclose" onclick="closeM('add-modal')">&times;</button></div>
+    <div class="mbody">
+      <div class="fs"><div class="fst">Personal Details</div>
+        <div class="fg">
+          <div class="field"><label>Full Name *</label><input type="text" id="an" placeholder="Customer full name"/></div>
+          <div class="field"><label>Phone *</label><input type="tel" id="aph" placeholder="10-digit mobile"/></div>
+          <div class="field"><label>Email *</label><input type="email" id="aem" placeholder="Active email"/></div>
+          <div class="field"><label>Assign to Employee</label><select id="aasgn"><option value="">Unassigned</option></select></div>
+        </div>
+      </div>
+      <div class="fs"><div class="fst">Address</div>
+        <div class="fg">
+          <div class="field ff"><label>Address Line *</label><input type="text" id="aal" placeholder="House no, street, area"/></div>
+          <div class="field"><label>Village / City *</label><input type="text" id="avc" placeholder="Village or city"/></div>
+          <div class="field"><label>District *</label><input type="text" id="adi" placeholder="District name"/></div>
+          <div class="field"><label>State *</label><input type="text" id="ast" value="Odisha"/></div>
+          <div class="field"><label>Pincode *</label><input type="text" id="api" placeholder="6-digit" maxlength="6"/></div>
+        </div>
+      </div>
+      <div class="fs"><div class="fst">Service &amp; Property</div>
+        <div class="fg">
+          <div class="field"><label>Service *</label><select id="asv"><option value="">Select service...</option></select></div>
+          <div class="field"><label>Roof Type *</label>
+            <select id="arf"><option value="">Select roof type</option><option>RCC / Concrete</option><option>Tin / Sheet</option><option>Tile</option><option>Asbestos</option><option>Other</option></select>
+          </div>
+          <div class="field"><label>Monthly Bill (₹)</label><input type="text" id="abl" placeholder="e.g. 2500"/></div>
+          <div class="field"><label>Preferred Capacity</label><input type="text" id="acp" placeholder="e.g. 3kW"/></div>
+          <div class="field"><label>Preferred Date</label><input type="date" id="adt"/></div>
+          <div class="field"><label>Preferred Time</label><input type="time" id="atm"/></div>
+          <div class="field ff"><label>Notes</label><textarea id="amg" placeholder="Any notes..."></textarea></div>
+        </div>
+      </div>
+      <div class="fs"><div class="fst">Documents Upload</div>
+        <p style="font-size:12px;color:var(--tx3);margin-bottom:.75rem">Upload all documents — Aadhaar, electricity bill, site photos. PDF, JPG, PNG. Max 5MB each.</p>
+        <div class="fu" onclick="document.getElementById('dinp').click()">
+          <input type="file" id="dinp" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="hf(this.files)"/>
+          <div style="font-size:26px;margin-bottom:.4rem">📎</div>
+          <div style="font-size:13px;color:var(--tx2);font-weight:500">Click to upload documents</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:2px">PDF, JPG, PNG — multiple files allowed</div>
+        </div>
+        <div class="flist" id="flist"></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeM('add-modal')">Cancel</button>
+      <button class="btn btn-primary" id="sbtn" onclick="saveApp()">Save Application</button>
+    </div>
+  </div>
+</div>
+
+<!-- UPDATE APPLICATION MODAL -->
+<div class="mb" id="upd-modal">
+  <div class="modal" style="width:500px">
+    <div class="mh"><h2 id="updtitle">Update Application</h2><button class="mclose" onclick="closeM('upd-modal')">&times;</button></div>
+    <div class="mbody">
+      <div class="field" style="margin-bottom:1rem"><label>Status</label>
+        <select id="updst">
+          <option>Applied</option><option>Contacted</option><option>Site Visit Scheduled</option>
+          <option>Site Visit Completed</option><option>Quotation Sent</option>
+          <option>Installation Started</option><option>In Progress</option><option>Completed</option><option>Cancelled</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:1rem"><label>Assign to Employee</label><select id="updasgn"><option value="">Unassigned</option></select></div>
+      <div class="field"><label>Notes</label><textarea id="updnt" rows="4" placeholder="Update notes..."></textarea></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeM('upd-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitUpd()">Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD EMPLOYEE MODAL -->
+<div class="mb" id="emp-modal">
+  <div class="modal" style="width:480px">
+    <div class="mh"><h2 id="empt">Add Employee</h2><button class="mclose" onclick="closeM('emp-modal')">&times;</button></div>
+    <div class="mbody">
+      <div class="fg">
+        <div class="field"><label>Full Name *</label><input type="text" id="en" placeholder="Employee name"/></div>
+        <div class="field"><label>Phone *</label><input type="tel" id="eph" placeholder="10-digit mobile"/></div>
+        <div class="field"><label>Email</label><input type="email" id="eem" placeholder="Employee email"/></div>
+        <div class="field"><label>Job Title</label><input type="text" id="ejt" placeholder="e.g. Installation Staff" value="Installation Staff"/></div>
+        <div class="field"><label>Password *</label><input type="password" id="epw" placeholder="Min 6 characters"/></div>
+        <div class="field"><label>Status</label><select id="eac"><option value="1">Active</option><option value="0">Inactive</option></select></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeM('emp-modal')">Cancel</button>
+      <button class="btn btn-primary" id="empsbtn" onclick="saveEmp()">Add Employee</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="mb" id="view-modal">
+  <div class="modal">
+    <div class="mh"><h2 id="vname">Details</h2><button class="mclose" onclick="closeM('view-modal')">&times;</button></div>
+    <div class="mbody" id="vbody"></div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeM('view-modal')">Close</button>
+      <button class="btn btn-primary" id="veditbtn">Edit this Application</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE MODAL -->
+<div class="mb" id="profile-modal">
+  <div class="modal" style="width:620px">
+    <div class="mh"><h2>My Profile</h2><button class="mclose" onclick="closeM('profile-modal')">&times;</button></div>
+    <div class="mbody">
+      <div class="photo-row">
+        <div class="photo-prev" id="profPhotoPrev">KO</div>
+        <div class="photo-actions">
+          <input type="file" id="profPhotoInput" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="onPhotoPick(this.files)"/>
+          <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('profPhotoInput').click()">Upload photo</button>
+          <button type="button" class="btn btn-outline btn-sm" id="profPhotoRemove" onclick="onPhotoRemove()" style="display:none">Remove</button>
+          <div class="photo-hint">Square images work best. Max 2MB. Auto-cropped to 256×256.</div>
+        </div>
+      </div>
+
+      <div class="fs"><div class="fst">Display</div>
+        <div class="fg">
+          <div class="field"><label>Display name *</label><input type="text" id="prof-name" placeholder="What appears across the app"/></div>
+          <div class="field"><label>Role</label><input type="text" id="prof-role-d" value="Administrator" disabled style="opacity:.65;cursor:not-allowed"/></div>
+        </div>
+      </div>
+
+      <div class="fs"><div class="fst">Login Account</div>
+        <div class="fg">
+          <div class="field"><label>Username (login)</label><input type="text" id="prof-uname" disabled style="opacity:.65;cursor:not-allowed"/></div>
+          <div class="field"></div>
+          <div class="field"><label>Login email <span class="chip">used for OTP</span></label>
+            <div class="field-row" style="margin-top:0">
+              <input type="email" id="prof-email" disabled style="opacity:.65;cursor:not-allowed"/>
+              <button type="button" class="linkbtn" onclick="openChangeEmail()">Change</button>
+            </div>
+          </div>
+          <div class="field"><label>Admin mobile <span class="chip">private</span></label>
+            <div class="field-row" style="margin-top:0">
+              <input type="text" id="prof-mobile" disabled style="opacity:.65;cursor:not-allowed" placeholder="Not set yet"/>
+              <button type="button" class="linkbtn" onclick="openChangeMobile()">Change</button>
+            </div>
+          </div>
+          <div class="field ff"><label>Password</label>
+            <div class="field-row" style="margin-top:0">
+              <input type="password" value="••••••••••" disabled style="opacity:.65;cursor:not-allowed"/>
+              <button type="button" class="linkbtn" onclick="openChangePassword()">Change password</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fs"><div class="fst">Status</div>
+        <div class="dc">
+          <div class="dr2"><span class="dl">Last login</span><span class="dv" id="profLogin">—</span></div>
+          <div class="dr2"><span class="dl">Joined</span><span class="dv" id="profCreated">—</span></div>
+          <div class="dr2"><span class="dl">Account</span><span class="dv"><span class="badge bg-green">Active</span></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeM('profile-modal')">Cancel</button>
+      <button class="btn btn-primary" id="profSaveBtn" onclick="saveProfile()">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div class="mb" id="pwd-modal">
+  <div class="modal" style="width:480px">
+    <div class="mh"><h2>Change Password</h2><button class="mclose" onclick="closeM('pwd-modal')">&times;</button></div>
+    <div class="mbody">
+      <div class="otp-step active" id="pwd-step-1">
+        <div class="otp-note">After you fill these in we will send a 6-digit code to your <strong>login email</strong> to confirm. New password must be at least 8 characters.</div>
+        <div class="field"><label>Current password *</label><input type="password" id="pwd-old" autocomplete="current-password"/></div>
+        <div class="field"><label>New password *</label><input type="password" id="pwd-new" autocomplete="new-password" placeholder="Min 8 characters"/></div>
+        <div class="field"><label>Confirm new password *</label><input type="password" id="pwd-conf" autocomplete="new-password"/></div>
+      </div>
+      <div class="otp-step" id="pwd-step-2">
+        <div class="otp-note">We sent a 6-digit code to <strong id="pwd-sent-to">your email</strong>. Enter it to confirm the password change. Code expires in 5 minutes.</div>
+        <div class="otp-grid" id="pwd-otp-grid">
+          <input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/>
+          <input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/>
+        </div>
+        <div style="text-align:center;font-size:12px;color:var(--tx3)">
+          Didn't receive it? <button type="button" class="linkbtn" style="padding:0" id="pwdResendBtn" onclick="resendPwdOtp()">Resend code</button>
+          <span id="pwdResendCd" style="margin-left:6px;color:var(--tx3)"></span>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeM('pwd-modal')">Cancel</button>
+      <button class="btn btn-primary" id="pwdBtn" onclick="submitPassword()">Send verification code</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE EMAIL MODAL -->
+<div class="mb" id="email-modal">
+  <div class="modal" style="width:480px">
+    <div class="mh"><h2>Change Login Email</h2><button class="mclose" onclick="closeM('email-modal')">&times;</button></div>
+    <div class="mbody">
+      <div class="otp-step active" id="email-step-1">
+        <div class="otp-note">Enter the new email you want to use for admin login &amp; OTP. We will send a verification code to your <strong>current email</strong> to confirm the change.</div>
+        <div class="field"><label>Current email</label><input type="email" id="email-cur" disabled style="opacity:.65"/></div>
+        <div class="field"><label>New email *</label><input type="email" id="email-new" placeholder="new.email@example.com"/></div>
+      </div>
+      <div class="otp-step" id="email-step-2">
+        <div class="otp-note">We sent a 6-digit code to <strong id="email-sent-to">your current email</strong>. Enter it below to confirm. Code expires in 10 minutes.</div>
+        <div class="otp-grid" id="email-otp-grid">
+          <input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/>
+          <input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/>
+        </div>
+        <div style="text-align:center;font-size:12px;color:var(--tx3)">
+          Didn't receive it? <button type="button" class="linkbtn" style="padding:0" id="emailResendBtn" onclick="resendEmailOtp()">Resend code</button>
+          <span id="emailResendCd" style="margin-left:6px;color:var(--tx3)"></span>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeM('email-modal')">Cancel</button>
+      <button class="btn btn-primary" id="emailNextBtn" onclick="emailNextStep()">Send verification code</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE MOBILE MODAL -->
+<div class="mb" id="mobile-modal">
+  <div class="modal" style="width:520px">
+    <div class="mh"><h2>Change Admin Mobile</h2><button class="mclose" onclick="closeM('mobile-modal')">&times;</button></div>
+    <div class="mbody">
+      <div class="otp-step active" id="mob-step-1">
+        <div class="otp-note">Two-factor change: we will send <strong>one OTP to your current email</strong> and <strong>one OTP to your current mobile</strong>. You need both to confirm.</div>
+        <div class="field"><label>Current mobile</label><input type="text" id="mob-cur" disabled style="opacity:.65" placeholder="Not set yet"/></div>
+        <div class="field"><label>New mobile (10 digits) *</label><input type="tel" id="mob-new" maxlength="10" placeholder="9XXXXXXXXX"/></div>
+      </div>
+      <div class="otp-step" id="mob-step-2">
+        <div id="mob-email-block">
+          <div class="otp-note">Code 1 — sent to email <strong id="mob-email-sent">your current email</strong></div>
+          <div class="otp-grid" id="mob-email-grid">
+            <input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/>
+            <input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/>
+          </div>
+        </div>
+        <div id="mob-sms-block" style="margin-top:1rem">
+          <div class="otp-note warn">Code 2 — sent to current mobile <strong id="mob-sms-sent"></strong>. <span id="mob-sms-warn"></span></div>
+          <div class="otp-grid" id="mob-sms-grid">
+            <input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/>
+            <input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/><input maxlength="1" inputmode="numeric"/>
+          </div>
+        </div>
+        <div style="text-align:center;font-size:12px;color:var(--tx3);margin-top:.75rem">
+          <button type="button" class="linkbtn" style="padding:0" id="mobResendBtn" onclick="resendMobileOtp()">Resend codes</button>
+          <span id="mobResendCd" style="margin-left:6px;color:var(--tx3)"></span>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeM('mobile-modal')">Cancel</button>
+      <button class="btn btn-primary" id="mobNextBtn" onclick="mobileNextStep()">Send verification codes</button>
+    </div>
+  </div>
+</div>
+
+<!-- BUSINESS SETTINGS MODAL -->
+<div class="mb" id="company-modal">
+  <div class="modal" style="width:640px">
+    <div class="mh"><h2>Business Settings</h2><button class="mclose" onclick="closeM('company-modal')">&times;</button></div>
+    <div class="mbody">
+      <div class="otp-note">These appear publicly on your website (Contact page, footer, quotations). Separate from your admin login email/mobile.</div>
+      <div class="fs"><div class="fst">Business Identity</div>
+        <div class="fg">
+          <div class="field ff"><label>Business name</label><input type="text" id="cs-name" placeholder="Krishna Solar Solutions"/></div>
+          <div class="field ff"><label>Tagline</label><input type="text" id="cs-tag" placeholder="Powering India's homes"/></div>
+          <div class="field"><label>Public phone</label><input type="tel" id="cs-phone" placeholder="Main contact number"/></div>
+          <div class="field"><label>Public email</label><input type="email" id="cs-email" placeholder="hello@kss.in"/></div>
+          <div class="field"><label>WhatsApp number</label><input type="tel" id="cs-wa" placeholder="10-digit WhatsApp"/></div>
+          <div class="field"><label>Logo URL</label><input type="text" id="cs-logo" placeholder="assets/kss-logo.jpeg"/></div>
+          <div class="field ff"><label>Office address</label><textarea id="cs-addr" placeholder="Office address"></textarea></div>
+        </div>
+      </div>
+      <div class="fs"><div class="fst">Business Documents</div>
+        <div class="fg">
+          <div class="field"><label>GSTIN</label><input type="text" id="cs-gst" placeholder="22ABCDE1234F1Z5"/></div>
+          <div class="field"><label>PAN</label><input type="text" id="cs-pan" placeholder="ABCDE1234F"/></div>
+          <div class="field ff"><label>Bank account / UPI</label><input type="text" id="cs-bank" placeholder="A/c · IFSC · UPI ID"/></div>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeM('company-modal')">Cancel</button>
+      <button class="btn btn-primary" id="csSaveBtn" onclick="saveCompany()">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS MODAL -->
+<div class="mb" id="notif-modal">
+  <div class="modal" style="width:560px">
+    <div class="mh">
+      <h2>Notifications <span id="notifCount" style="font-size:12px;color:var(--tx3);font-weight:400;margin-left:6px"></span></h2>
+      <button class="mclose" onclick="closeM('notif-modal')">&times;</button>
+    </div>
+    <div class="mbody"><div class="list" id="notifList"></div></div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="markAllNotifRead()">Mark all read</button>
+      <button class="btn btn-primary" onclick="closeM('notif-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACTIVITY MODAL -->
+<div class="mb" id="activity-modal">
+  <div class="modal" style="width:620px">
+    <div class="mh"><h2>Activity Logs</h2><button class="mclose" onclick="closeM('activity-modal')">&times;</button></div>
+    <div class="mbody"><div class="list" id="activityList"></div></div>
+    <div class="mfoot"><button class="btn btn-outline" onclick="closeM('activity-modal')">Close</button></div>
+  </div>
+</div>
+
+<!-- PREFERENCES MODAL -->
+<div class="mb" id="prefs-modal">
+  <div class="modal" style="width:480px">
+    <div class="mh"><h2>Preferences</h2><button class="mclose" onclick="closeM('prefs-modal')">&times;</button></div>
+    <div class="mbody">
+      <div class="field"><label>Default landing tab</label>
+        <select id="pf-tab"><option value="dash">Dashboard</option><option value="apps">All Applications</option><option value="emps">Employees</option></select>
+      </div>
+      <div class="field" style="margin-top:1rem"><label>Theme density</label>
+        <select id="pf-density"><option value="comfortable">Comfortable</option><option value="compact">Compact</option></select>
+      </div>
+      <div class="field" style="margin-top:1rem">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="pf-toast" style="width:auto;margin:0"/> Show toast notifications
+        </label>
+      </div>
+      <div class="field" style="margin-top:1rem">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="pf-confirm" style="width:auto;margin:0"/> Confirm before deleting employees
+        </label>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeM('prefs-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePrefs()">Save Preferences</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORTS MODAL -->
+<div class="mb" id="reports-modal">
+  <div class="modal" style="width:760px">
+    <div class="mh"><h2>Reports</h2><button class="mclose" onclick="closeM('reports-modal')">&times;</button></div>
+    <div class="mbody" id="reportsBody"></div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeM('reports-modal')">Close</button>
+      <button class="btn btn-primary" onclick="toast('Connect backend to export PDF / Excel')">Export Report</button>
+    </div>
+  </div>
+</div>
+
+<!-- EMPLOYEE DETAIL MODAL -->
+<div class="mb" id="empdet-modal">
+  <div class="modal">
+    <div class="mh"><h2 id="edTitle">Employee</h2><button class="mclose" onclick="closeM('empdet-modal')">&times;</button></div>
+    <div class="mbody" id="edBody"></div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeM('empdet-modal')">Close</button>
+      <button class="btn btn-primary" id="edFilterBtn">View their applications</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let ME=null,apps=[],emps=[],svcs=[],notifs=[],activity=[],biz={},sfiles=[],updId=null,editEmpId=null,atab_val='all';
+let profilePhotoDraft=null,profilePhotoRemove=false;
+const COMPANY_KEY='kssCompanySettings',PREFS_KEY='kssAdminPrefs',NOTIF_READ_KEY='kssNotifRead';
+const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/,PHONE_RE=/^[6-9]\d{9}$/;
+
+function pmCounts(){
+  const read=JSON.parse(localStorage.getItem(NOTIF_READ_KEY)||'[]');
+  const unread=notifs.filter(n=>!read.includes(n.id)).length;
+  const el=document.getElementById('pmNotifCount');
+  if(el){el.textContent=unread>0?unread:'';}
+}
+function toggleProfileMenu(e){
+  if(e)e.stopPropagation();
+  const m=document.getElementById('profileMenu'),b=document.getElementById('userBtn');
+  const open=m.classList.toggle('open');
+  b.classList.toggle('open',open);
+  b.setAttribute('aria-expanded',open);
+  pmCounts();
+}
+function closeProfileMenu(){
+  document.getElementById('profileMenu').classList.remove('open');
+  document.getElementById('userBtn').classList.remove('open');
+  document.getElementById('userBtn').setAttribute('aria-expanded','false');
+}
+document.addEventListener('click',e=>{
+  const wrap=document.querySelector('.user-section');
+  if(wrap&&!wrap.contains(e.target))closeProfileMenu();
+});
+function pmClick(action){
+  closeProfileMenu();
+  if(action==='profile')openProfile();
+  else if(action==='company')openCompany();
+  else if(action==='notif')openNotif();
+  else if(action==='activity')openActivity();
+  else if(action==='emps')pg('emps',document.querySelectorAll('.ni')[3]);
+  else if(action==='reports')openReports();
+  else if(action==='prefs')openPrefs();
+  else if(action==='logout')logout();
+}
+
+/* ---- SESSION BOOTSTRAP (skip login if already authed via auth.html) ---- */
+function readSession(){
+  try{
+    const s=sessionStorage.getItem('kssSession')||localStorage.getItem('kssSession');
+    return s?JSON.parse(s):null;
+  }catch(e){return null;}
+}
+function clearSession(){
+  sessionStorage.removeItem('kssSession');
+  localStorage.removeItem('kssSession');
+  localStorage.removeItem('kssBootstrap');
+}
+async function bootFromSession(){
+  const s=readSession();
+  if(!s||s.role!=='admin'){window.location.replace('staff-login.html?role=admin');return;}
+  ME=s;
+  try{
+    const r=await fetch('/api/bootstrap');
+    if(!r.ok)throw new Error('bootstrap failed');
+    const data=await r.json();
+    apps=data.applications||[];
+    emps=(data.users||[]).filter(u=>u.role==='employee');
+    svcs=(data.services||[]).filter(s=>s.active);
+    notifs=data.notifications||[];
+    activity=data.employees||[];
+    biz=data.businessSettings||{};
+  }catch(e){
+    try{
+      const cached=JSON.parse(localStorage.getItem('kssBootstrap')||'{}');
+      apps=cached.applications||[];
+      emps=(cached.users||[]).filter(u=>u.role==='employee');
+      svcs=(cached.services||[]).filter(s=>s.active);
+      notifs=cached.notifications||[];
+      activity=cached.employees||[];
+      biz=cached.businessSettings||{};
+    }catch(_){}
+  }
+  applyMe();
+  document.getElementById('ls').style.display='none';
+  document.getElementById('app').style.display='flex';
+  fillDropdowns();renderDash();renderEmps();applyPrefs();pmCounts();
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  bootFromSession();
+  bindOtpGrid(document.getElementById('email-otp-grid'));
+  bindOtpGrid(document.getElementById('mob-email-grid'));
+  bindOtpGrid(document.getElementById('mob-sms-grid'));
+  bindOtpGrid(document.getElementById('pwd-otp-grid'));
+});
+
+function applyMe(){
+  const display=ME.displayName||ME.name||'Admin';
+  const role=ME.jobTitle||'Administrator';
+  document.getElementById('aname').textContent=display;
+  document.getElementById('arole').textContent=role;
+  document.getElementById('pmName').textContent=display;
+  document.getElementById('pmRole').textContent=role;
+  const av=document.getElementById('aav');
+  const ini=(display||'A').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  if(ME.profilePhoto){av.innerHTML=`<img src="${x(ME.profilePhoto)}" alt=""/>`;}
+  else{av.textContent=ini;av.style.background='#f59e0b';}
+}
+
+/* ---- AUTH ---- */
+async function doLogin(){
+  const u=document.getElementById('lu').value.trim(),p=document.getElementById('lp').value;
+  const e=document.getElementById('lerr');e.style.display='none';
+  if(!u||!p){e.textContent='Enter username and password.';e.style.display='block';return;}
+  const btn=document.getElementById('lbtn');btn.textContent='Logging in...';btn.disabled=true;
+  try{
+    const r=await api('/api/login',{role:'admin',username:u,password:p});
+    ME=r.user;apps=r.applications||[];
+    emps=(r.users||[]).filter(u=>u.role==='employee');
+    svcs=(r.services||[]).filter(s=>s.active);
+    notifs=r.notifications||[];
+    activity=r.employees||[];
+    biz=r.businessSettings||{};
+    try{sessionStorage.setItem('kssSession',JSON.stringify(ME));localStorage.setItem('kssSession',JSON.stringify(ME));localStorage.setItem('kssBootstrap',JSON.stringify(r));}catch(_){}
+    applyMe();
+    document.getElementById('ls').style.display='none';
+    document.getElementById('app').style.display='flex';
+    fillDropdowns();renderDash();renderEmps();applyPrefs();pmCounts();
+  }catch(ex){e.textContent=ex.message||'Login failed.';e.style.display='block';}
+  finally{btn.textContent='Login as Admin';btn.disabled=false;}
+}
+function logout(){clearSession();window.location.href='staff-login.html?role=admin';}
+
+function syncFromBootstrap(r){
+  if(!r)return;
+  if(r.applications)apps=r.applications;
+  if(r.users)emps=r.users.filter(u=>u.role==='employee');
+  if(r.services)svcs=r.services.filter(s=>s.active);
+  if(r.notifications)notifs=r.notifications;
+  if(r.employees)activity=r.employees;
+  if(r.businessSettings)biz=r.businessSettings;
+  if(r.user&&r.user.role==='admin'){ME=r.user;try{sessionStorage.setItem('kssSession',JSON.stringify(ME));localStorage.setItem('kssSession',JSON.stringify(ME));}catch(_){}applyMe();}
+  pmCounts();
+}
+
+/* ---- PROFILE MODAL (editable) ---- */
+function setProfPhotoPrev(src){
+  const el=document.getElementById('profPhotoPrev');
+  if(src){el.innerHTML=`<img src="${x(src)}" alt=""/>`;document.getElementById('profPhotoRemove').style.display='block';}
+  else{
+    const display=ME.displayName||ME.name||'A';
+    el.textContent=display.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('profPhotoRemove').style.display='none';
+  }
+}
+function openProfile(){
+  profilePhotoDraft=null;profilePhotoRemove=false;
+  document.getElementById('prof-name').value=ME.displayName||ME.name||'';
+  document.getElementById('prof-uname').value=ME.phone||'admin';
+  document.getElementById('prof-email').value=ME.email||'';
+  document.getElementById('prof-mobile').value=ME.mobile||'';
+  document.getElementById('profLogin').textContent=ME.lastLogin||'—';
+  document.getElementById('profCreated').textContent=ME.createdAt||'—';
+  setProfPhotoPrev(ME.profilePhoto||'');
+  document.getElementById('profile-modal').classList.add('open');
+}
+function onPhotoPick(files){
+  if(!files||!files[0])return;
+  const f=files[0];
+  if(f.size>2*1024*1024){toast('Image is over 2MB. Pick a smaller one.',true);return;}
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+      const size=256;
+      const c=document.createElement('canvas');c.width=size;c.height=size;
+      const ctx=c.getContext('2d');
+      // square center-crop
+      const s=Math.min(img.width,img.height);
+      const sx=(img.width-s)/2,sy=(img.height-s)/2;
+      ctx.drawImage(img,sx,sy,s,s,0,0,size,size);
+      profilePhotoDraft=c.toDataURL('image/jpeg',0.85);
+      profilePhotoRemove=false;
+      setProfPhotoPrev(profilePhotoDraft);
+    };
+    img.onerror=()=>toast('Could not load that image.',true);
+    img.src=reader.result;
+  };
+  reader.onerror=()=>toast('Could not read the file.',true);
+  reader.readAsDataURL(f);
+}
+function onPhotoRemove(){
+  profilePhotoDraft=null;profilePhotoRemove=true;
+  setProfPhotoPrev('');
+}
+async function saveProfile(){
+  const name=v('prof-name');
+  if(!name||name.length<2){toast('Display name is too short.',true);return;}
+  const btn=document.getElementById('profSaveBtn');btn.textContent='Saving...';btn.disabled=true;
+  try{
+    const payload={admin_phone:ME.phone,name,displayName:name};
+    if(profilePhotoDraft)payload.profilePhoto=profilePhotoDraft;
+    else if(profilePhotoRemove)payload.profilePhoto='';
+    const r=await api('/api/admin/profile',payload);
+    syncFromBootstrap(r);
+    closeM('profile-modal');toast('Profile updated!');
+  }catch(e){toast(e.message||'Could not save profile.',true);}
+  finally{btn.textContent='Save Profile';btn.disabled=false;}
+}
+
+/* ---- CHANGE PASSWORD (2-step OTP) ---- */
+let pwdStep=1,pwdPending=null;
+function openChangePassword(){
+  pwdStep=1;pwdPending=null;
+  ['pwd-old','pwd-new','pwd-conf'].forEach(id=>document.getElementById(id).value='');
+  clearOtpGrid(document.getElementById('pwd-otp-grid'));
+  document.getElementById('pwd-step-1').classList.add('active');
+  document.getElementById('pwd-step-2').classList.remove('active');
+  document.getElementById('pwdBtn').textContent='Send verification code';
+  document.getElementById('pwd-modal').classList.add('open');
+}
+async function submitPassword(){
+  const btn=document.getElementById('pwdBtn');
+  if(pwdStep===1){
+    const oldP=v('pwd-old'),newP=v('pwd-new'),conf=v('pwd-conf');
+    if(!oldP||!newP||!conf){toast('Fill all three fields.',true);return;}
+    if(newP.length<8){toast('New password must be at least 8 characters.',true);return;}
+    if(newP!==conf){toast("New password and confirmation don't match.",true);return;}
+    btn.textContent='Sending...';btn.disabled=true;
+    try{
+      const r=await api('/api/admin/password/request-otp',{admin_phone:ME.phone,oldPassword:oldP,newPassword:newP,confirmPassword:conf});
+      pwdPending={oldP,newP,conf};
+      pwdStep=2;
+      document.getElementById('pwd-sent-to').textContent=r.to||(ME.email||'your login email');
+      document.getElementById('pwd-step-1').classList.remove('active');
+      document.getElementById('pwd-step-2').classList.add('active');
+      btn.textContent='Confirm password change';
+      toast(r.message||'Code sent.');
+      startResendCountdown('pwdResendBtn','pwdResendCd',60);
+      setTimeout(()=>document.getElementById('pwd-otp-grid').querySelector('input').focus(),100);
+    }catch(e){toast(e.message||'Could not start password change.',true);}
+    finally{btn.disabled=false;}
+    return;
+  }
+  // step 2: verify code
+  const code=readOtp(document.getElementById('pwd-otp-grid'));
+  if(code.length!==6){toast('Enter all 6 digits.',true);return;}
+  btn.textContent='Confirming...';btn.disabled=true;
+  try{
+    await api('/api/admin/password/confirm',{admin_phone:ME.phone,code});
+    closeM('pwd-modal');toast('Password updated. Please log in again.');
+    setTimeout(logout,1200);
+  }catch(e){toast(e.message||'Verification failed.',true);}
+  finally{btn.textContent='Confirm password change';btn.disabled=false;}
+}
+async function resendPwdOtp(){
+  if(!pwdPending){toast('Fill the form first.',true);return;}
+  try{
+    const r=await api('/api/admin/password/request-otp',{admin_phone:ME.phone,oldPassword:pwdPending.oldP,newPassword:pwdPending.newP,confirmPassword:pwdPending.conf});
+    toast(r.message||'Code resent.');
+    startResendCountdown('pwdResendBtn','pwdResendCd',60);
+  }catch(e){toast(e.message||'Could not resend.',true);}
+}
+
+/* generic resend cooldown timer */
+function startResendCountdown(btnId,labelId,seconds){
+  const btn=document.getElementById(btnId),lab=document.getElementById(labelId);
+  let s=seconds;
+  if(btn)btn.disabled=true;
+  if(lab)lab.textContent='(in '+s+'s)';
+  const t=setInterval(()=>{
+    s--;
+    if(s<=0){clearInterval(t);if(btn)btn.disabled=false;if(lab)lab.textContent='';return;}
+    if(lab)lab.textContent='(in '+s+'s)';
+  },1000);
+}
+
+/* ---- CHANGE EMAIL ---- */
+function setOtpStep(modalId,step){
+  const root=document.getElementById(modalId);
+  root.querySelectorAll('.otp-step').forEach(el=>el.classList.remove('active'));
+  root.querySelector('#'+modalId.split('-')[0]+'-step-'+step).classList.add('active');
+}
+function readOtp(grid){return Array.from(grid.querySelectorAll('input')).map(i=>i.value).join('');}
+function bindOtpGrid(grid){
+  const ins=grid.querySelectorAll('input');
+  ins.forEach((el,i)=>{
+    el.addEventListener('input',()=>{
+      el.value=el.value.replace(/[^0-9]/g,'').slice(0,1);
+      if(el.value&&i<ins.length-1)ins[i+1].focus();
+    });
+    el.addEventListener('keydown',e=>{
+      if(e.key==='Backspace'&&!el.value&&i>0)ins[i-1].focus();
+    });
+    el.addEventListener('paste',e=>{
+      const txt=(e.clipboardData||window.clipboardData).getData('text');
+      const digits=txt.replace(/[^0-9]/g,'').slice(0,ins.length);
+      if(digits){e.preventDefault();digits.split('').forEach((d,k)=>{if(ins[k])ins[k].value=d;});if(ins[digits.length-1])ins[digits.length-1].focus();}
+    });
+  });
+}
+function clearOtpGrid(grid){grid.querySelectorAll('input').forEach(i=>i.value='');}
+
+let emailChangeStep=1,emailChangeTarget='';
+function openChangeEmail(){
+  emailChangeStep=1;emailChangeTarget='';
+  document.getElementById('email-cur').value=ME.email||'';
+  document.getElementById('email-new').value='';
+  clearOtpGrid(document.getElementById('email-otp-grid'));
+  document.getElementById('email-step-1').classList.add('active');
+  document.getElementById('email-step-2').classList.remove('active');
+  document.getElementById('emailNextBtn').textContent='Send verification code';
+  document.getElementById('email-modal').classList.add('open');
+}
+async function emailNextStep(){
+  const btn=document.getElementById('emailNextBtn');
+  if(emailChangeStep===1){
+    const ne=v('email-new');
+    if(!EMAIL_RE.test(ne)){toast('Enter a valid email.',true);return;}
+    btn.textContent='Sending...';btn.disabled=true;
+    try{
+      const r=await api('/api/admin/email/request-otp',{admin_phone:ME.phone,newEmail:ne});
+      emailChangeTarget=ne;
+      document.getElementById('email-sent-to').textContent=r.to||(ME.email||'your current email');
+      emailChangeStep=2;
+      document.getElementById('email-step-1').classList.remove('active');
+      document.getElementById('email-step-2').classList.add('active');
+      btn.textContent='Confirm change';
+      toast(r.message||'Code sent.');
+      startResendCountdown('emailResendBtn','emailResendCd',60);
+      setTimeout(()=>document.getElementById('email-otp-grid').querySelector('input').focus(),100);
+    }catch(e){toast(e.message||'Failed to send code.',true);}
+    finally{btn.disabled=false;}
+    return;
+  }
+  // step 2: verify
+  const code=readOtp(document.getElementById('email-otp-grid'));
+  if(code.length!==6){toast('Enter all 6 digits.',true);return;}
+  btn.textContent='Confirming...';btn.disabled=true;
+  try{
+    const r=await api('/api/admin/email/verify',{admin_phone:ME.phone,newEmail:emailChangeTarget,code});
+    syncFromBootstrap(r);
+    if(r.user){ME=r.user;applyMe();}
+    closeM('email-modal');toast('Login email updated.');
+    openProfile();
+  }catch(e){toast(e.message||'Verification failed.',true);}
+  finally{btn.textContent='Confirm change';btn.disabled=false;}
+}
+async function resendEmailOtp(){
+  if(!emailChangeTarget){toast('Enter a new email first.',true);return;}
+  try{
+    const r=await api('/api/admin/email/request-otp',{admin_phone:ME.phone,newEmail:emailChangeTarget});
+    toast(r.message||'Code resent.');
+    startResendCountdown('emailResendBtn','emailResendCd',60);
+  }catch(e){toast(e.message||'Could not resend.',true);}
+}
+
+/* ---- CHANGE MOBILE ---- */
+let mobileChangeStep=1,mobileChangeTarget='',mobileNeedsSms=true;
+function openChangeMobile(){
+  mobileChangeStep=1;mobileChangeTarget='';mobileNeedsSms=!!(ME.mobile);
+  document.getElementById('mob-cur').value=ME.mobile||'';
+  document.getElementById('mob-new').value='';
+  clearOtpGrid(document.getElementById('mob-email-grid'));
+  clearOtpGrid(document.getElementById('mob-sms-grid'));
+  document.getElementById('mob-step-1').classList.add('active');
+  document.getElementById('mob-step-2').classList.remove('active');
+  document.getElementById('mobNextBtn').textContent='Send verification codes';
+  document.getElementById('mobile-modal').classList.add('open');
+}
+async function mobileNextStep(){
+  const btn=document.getElementById('mobNextBtn');
+  if(mobileChangeStep===1){
+    const nm=v('mob-new');
+    if(!PHONE_RE.test(nm)){toast('Enter a valid 10 digit mobile number.',true);return;}
+    btn.textContent='Sending...';btn.disabled=true;
+    try{
+      const r=await api('/api/admin/mobile/request-otp',{admin_phone:ME.phone,newMobile:nm});
+      mobileChangeTarget=nm;
+      mobileNeedsSms=!r.needsCurrentMobile;
+      document.getElementById('mob-email-sent').textContent=(r.email&&r.email.to)||ME.email||'your current email';
+      if(mobileNeedsSms){
+        document.getElementById('mob-sms-block').style.display='block';
+        document.getElementById('mob-sms-sent').textContent=(r.sms&&r.sms.to)||ME.mobile||'';
+        document.getElementById('mob-sms-warn').textContent=(r.sms&&!r.sms.sent)?'('+(r.sms.message||'')+')':'';
+      }else{
+        document.getElementById('mob-sms-block').style.display='none';
+      }
+      mobileChangeStep=2;
+      document.getElementById('mob-step-1').classList.remove('active');
+      document.getElementById('mob-step-2').classList.add('active');
+      btn.textContent='Confirm change';
+      toast('Verification codes sent.');
+      startResendCountdown('mobResendBtn','mobResendCd',60);
+      setTimeout(()=>document.getElementById('mob-email-grid').querySelector('input').focus(),100);
+    }catch(e){toast(e.message||'Failed to send codes.',true);}
+    finally{btn.disabled=false;}
+    return;
+  }
+  // step 2: verify
+  const emailCode=readOtp(document.getElementById('mob-email-grid'));
+  const smsCode=mobileNeedsSms?readOtp(document.getElementById('mob-sms-grid')):'';
+  if(emailCode.length!==6){toast('Enter the 6-digit email code.',true);return;}
+  if(mobileNeedsSms&&smsCode.length!==6){toast('Enter the 6-digit SMS code.',true);return;}
+  btn.textContent='Confirming...';btn.disabled=true;
+  try{
+    const r=await api('/api/admin/mobile/verify',{admin_phone:ME.phone,newMobile:mobileChangeTarget,emailCode,smsCode});
+    syncFromBootstrap(r);
+    if(r.user){ME=r.user;applyMe();}
+    closeM('mobile-modal');toast('Mobile number updated.');
+    openProfile();
+  }catch(e){toast(e.message||'Verification failed.',true);}
+  finally{btn.textContent='Confirm change';btn.disabled=false;}
+}
+async function resendMobileOtp(){
+  if(!mobileChangeTarget){toast('Enter a new mobile first.',true);return;}
+  try{
+    const r=await api('/api/admin/mobile/request-otp',{admin_phone:ME.phone,newMobile:mobileChangeTarget});
+    toast('Codes resent.');
+    startResendCountdown('mobResendBtn','mobResendCd',60);
+  }catch(e){toast(e.message||'Could not resend.',true);}
+}
+
+/* ---- BUSINESS SETTINGS (DB-backed) ---- */
+function openCompany(){
+  const c=biz||{};
+  document.getElementById('cs-name').value=c.businessName||'Krishna Solar Solutions';
+  document.getElementById('cs-tag').value=c.tagline||"Powering India's homes";
+  document.getElementById('cs-phone').value=c.businessMobile||'';
+  document.getElementById('cs-email').value=c.businessEmail||'';
+  document.getElementById('cs-wa').value=c.whatsappNumber||'';
+  document.getElementById('cs-logo').value=c.logo||'';
+  document.getElementById('cs-addr').value=c.officeAddress||'';
+  document.getElementById('cs-gst').value=c.gstin||'';
+  document.getElementById('cs-pan').value=c.pan||'';
+  document.getElementById('cs-bank').value=c.bankDetails||'';
+  document.getElementById('company-modal').classList.add('open');
+}
+async function saveCompany(){
+  const payload={
+    admin_phone:ME.phone,
+    businessName:v('cs-name'),tagline:v('cs-tag'),
+    businessMobile:v('cs-phone'),businessEmail:v('cs-email'),
+    whatsappNumber:v('cs-wa'),logo:v('cs-logo'),officeAddress:v('cs-addr'),
+    gstin:v('cs-gst'),pan:v('cs-pan'),bankDetails:v('cs-bank'),
+  };
+  const btn=document.getElementById('csSaveBtn');btn.textContent='Saving...';btn.disabled=true;
+  try{
+    const r=await api('/api/business-settings',payload);
+    syncFromBootstrap(r);
+    closeM('company-modal');toast('Business settings saved.');
+  }catch(e){toast(e.message||'Could not save settings.',true);}
+  finally{btn.textContent='Save Settings';btn.disabled=false;}
+}
+
+/* ---- NOTIFICATIONS ---- */
+function openNotif(){
+  const list=document.getElementById('notifList');
+  const read=JSON.parse(localStorage.getItem(NOTIF_READ_KEY)||'[]');
+  if(!notifs.length){list.innerHTML='<div class="empty">No notifications yet</div>';document.getElementById('notifCount').textContent='';}
+  else{
+    document.getElementById('notifCount').textContent='('+notifs.length+')';
+    list.innerHTML=notifs.map(n=>{
+      const unread=!read.includes(n.id);
+      const t=n.type||'info';
+      const ico=t==='application'?'📋':(t==='employee'?'👤':'🔔');
+      return `<div class="li${unread?' unread':''}">
+        <div class="li-ico">${ico}</div>
+        <div class="li-body">
+          <div class="li-t">${x(n.title||n.subject||'Notification')}</div>
+          <div class="li-s">${x(n.message||n.body||'')}</div>
+          <div class="li-time">${x(n.created_at||n.createdAt||'')}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('notif-modal').classList.add('open');
+}
+function markAllNotifRead(){
+  const ids=notifs.map(n=>n.id).filter(Boolean);
+  localStorage.setItem(NOTIF_READ_KEY,JSON.stringify(ids));
+  pmCounts();
+  openNotif();
+  toast('All notifications marked as read.');
+}
+
+/* ---- ACTIVITY ---- */
+function openActivity(){
+  const list=document.getElementById('activityList');
+  if(!activity.length){list.innerHTML='<div class="empty">No activity yet — employees haven&rsquo;t logged in.</div>';}
+  else{
+    list.innerHTML=activity.map(a=>`<div class="li">
+      <div class="li-ico">🟢</div>
+      <div class="li-body">
+        <div class="li-t">${x(a.name)} <span style="font-size:11px;color:var(--tx3);font-weight:400">(${x(a.role||'Employee')})</span></div>
+        <div class="li-s">${x(a.phone||'')}</div>
+      </div>
+      <div class="li-meta">${x(a.last_login||'')}</div>
+    </div>`).join('');
+  }
+  document.getElementById('activity-modal').classList.add('open');
+}
+
+/* ---- PREFERENCES ---- */
+function loadPrefs(){try{return JSON.parse(localStorage.getItem(PREFS_KEY)||'{}');}catch(e){return{};}}
+function openPrefs(){
+  const p=loadPrefs();
+  document.getElementById('pf-tab').value=p.tab||'dash';
+  document.getElementById('pf-density').value=p.density||'comfortable';
+  document.getElementById('pf-toast').checked=p.toast!==false;
+  document.getElementById('pf-confirm').checked=p.confirm!==false;
+  document.getElementById('prefs-modal').classList.add('open');
+}
+function savePrefs(){
+  const p={tab:document.getElementById('pf-tab').value,density:document.getElementById('pf-density').value,toast:document.getElementById('pf-toast').checked,confirm:document.getElementById('pf-confirm').checked};
+  localStorage.setItem(PREFS_KEY,JSON.stringify(p));
+  applyPrefs();closeM('prefs-modal');toast('Preferences saved.');
+}
+function applyPrefs(){
+  const p=loadPrefs();
+  if(p.density==='compact'){document.body.style.fontSize='13px';}else{document.body.style.fontSize='';}
+}
+
+/* ---- REPORTS ---- */
+function openReports(){
+  const total=apps.length;
+  const completed=apps.filter(a=>a.status==='Completed').length;
+  const cancelled=apps.filter(a=>a.status==='Cancelled').length;
+  const inProgress=apps.filter(a=>['In Progress','Installation Started','Site Visit Completed','Quotation Sent'].includes(a.status)).length;
+  const completionRate=total?Math.round(completed/total*100):0;
+  /* status distribution */
+  const statuses=['Applied','Contacted','Site Visit Scheduled','Site Visit Completed','Quotation Sent','Installation Started','In Progress','Completed','Cancelled'];
+  const counts={};statuses.forEach(s=>counts[s]=apps.filter(a=>a.status===s).length);
+  const maxCount=Math.max(1,...Object.values(counts));
+  /* employee perf */
+  const empPerf=emps.map(e=>{
+    const my=apps.filter(a=>a.assignedTo===e.phone);
+    const done=my.filter(a=>a.status==='Completed').length;
+    return {name:e.name,total:my.length,done,rate:my.length?Math.round(done/my.length*100):0};
+  }).sort((a,b)=>b.total-a.total);
+  /* district breakdown */
+  const distMap={};apps.forEach(a=>{const d=a.district||'Unknown';distMap[d]=(distMap[d]||0)+1;});
+  const dists=Object.entries(distMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxDist=Math.max(1,...Object.values(distMap));
+  /* service breakdown */
+  const svcMap={};apps.forEach(a=>{const s=a.service||'Other';svcMap[s]=(svcMap[s]||0)+1;});
+  const services=Object.entries(svcMap).sort((a,b)=>b[1]-a[1]);
+  const maxSvc=Math.max(1,...Object.values(svcMap));
+
+  document.getElementById('reportsBody').innerHTML=`
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-v">${total}</div><div class="kpi-l">Total apps</div></div>
+      <div class="kpi"><div class="kpi-v">${completed}</div><div class="kpi-l">Completed</div></div>
+      <div class="kpi"><div class="kpi-v">${completionRate}%</div><div class="kpi-l">Completion rate</div></div>
+    </div>
+    <div class="report-grid">
+      <div class="r-card"><h3>Status pipeline</h3>${statuses.map(s=>`
+        <div class="bar-row"><span class="bar-l">${x(s)}</span><span class="bar-w"><span class="bar-f" style="width:${counts[s]/maxCount*100}%;background:${barCol(s)}"></span></span><span class="bar-c">${counts[s]}</span></div>
+      `).join('')}</div>
+      <div class="r-card"><h3>Top districts</h3>${dists.length?dists.map(([d,c])=>`
+        <div class="bar-row"><span class="bar-l">${x(d)}</span><span class="bar-w"><span class="bar-f" style="width:${c/maxDist*100}%"></span></span><span class="bar-c">${c}</span></div>
+      `).join(''):'<div style="color:var(--tx3);font-size:13px">No data</div>'}</div>
+      <div class="r-card"><h3>Employee performance</h3>${empPerf.length?empPerf.map(e=>`
+        <div class="bar-row"><span class="bar-l">${x(e.name)}</span><span class="bar-w"><span class="bar-f" style="width:${e.rate}%"></span></span><span class="bar-c">${e.done}/${e.total}</span></div>
+      `).join(''):'<div style="color:var(--tx3);font-size:13px">No employees</div>'}</div>
+      <div class="r-card"><h3>Service breakdown</h3>${services.length?services.map(([s,c])=>`
+        <div class="bar-row"><span class="bar-l" style="font-size:11px">${x(s)}</span><span class="bar-w"><span class="bar-f" style="width:${c/maxSvc*100}%;background:#5b21b6"></span></span><span class="bar-c">${c}</span></div>
+      `).join(''):'<div style="color:var(--tx3);font-size:13px">No data</div>'}</div>
+    </div>
+  `;
+  document.getElementById('reports-modal').classList.add('open');
+}
+function barCol(status){
+  if(status==='Completed')return '#1a7a45';
+  if(status==='Cancelled')return '#991b1b';
+  if(['Applied','Contacted'].includes(status))return '#6b7280';
+  if(['Site Visit Scheduled','Site Visit Completed'].includes(status))return '#185fa5';
+  return '#d97706';
+}
+
+/* ---- EMPLOYEE DETAIL ---- */
+function openEmpDetail(id){
+  const e=emps.find(x=>x.id===id);if(!e)return;
+  const my=apps.filter(a=>a.assignedTo===e.phone);
+  const done=my.filter(a=>a.status==='Completed').length;
+  const pending=my.filter(a=>a.status!=='Completed'&&a.status!=='Cancelled').length;
+  const rate=my.length?Math.round(done/my.length*100):0;
+  const ini=(e.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('edTitle').textContent=e.name;
+  document.getElementById('edBody').innerHTML=`
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:1.25rem">
+      <div class="av" style="width:56px;height:56px;font-size:18px;background:#1a7a45">${x(ini)}</div>
+      <div style="flex:1">
+        <div style="font-size:18px;font-weight:500">${x(e.name)}</div>
+        <div style="font-size:12px;color:var(--tx3);margin-top:2px">${x(e.jobTitle||'Employee')} · ${x(e.phone)}</div>
+      </div>
+      <span class="badge ${e.active?'bg-green':'bg-red'}">${e.active?'Active':'Inactive'}</span>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-v">${my.length}</div><div class="kpi-l">Assigned</div></div>
+      <div class="kpi"><div class="kpi-v">${done}</div><div class="kpi-l">Completed</div></div>
+      <div class="kpi"><div class="kpi-v">${rate}%</div><div class="kpi-l">Success rate</div></div>
+    </div>
+    <div class="dc" style="margin-bottom:1rem">
+      <div class="dct">Contact &amp; access</div>
+      <div class="dr2"><span class="dl">Phone</span><span class="dv">${x(e.phone)}</span></div>
+      <div class="dr2"><span class="dl">Email</span><span class="dv">${x(e.email||'—')}</span></div>
+      <div class="dr2"><span class="dl">Last login</span><span class="dv">${x(e.lastLogin||'Never')}</span></div>
+      <div class="dr2"><span class="dl">Pending</span><span class="dv">${pending}</span></div>
+    </div>
+    <div class="dct">Assigned applications</div>
+    ${my.length?'<div class="list">'+my.slice(0,8).map(a=>`<div class="li">
+      <div class="li-ico">📋</div>
+      <div class="li-body"><div class="li-t">${x(a.name)}</div>
+        <div class="li-s">${x(a.service)} · ${x(a.district)}</div>
+        <div class="li-time">${x(a.createdAt||'')}</div>
+      </div>
+      <div class="li-meta"><span class="badge ${sb(a.status)}">${x(a.status)}</span></div>
+    </div>`).join('')+(my.length>8?'<div style="text-align:center;font-size:12px;color:var(--tx3);padding:.5rem">+ '+(my.length-8)+' more</div>':'')+'</div>':'<div class="empty" style="padding:1rem">No applications assigned yet</div>'}
+  `;
+  document.getElementById('edFilterBtn').onclick=()=>{closeM('empdet-modal');filterByEmp(e.phone);};
+  document.getElementById('empdet-modal').classList.add('open');
+}
+
+/* ---- PAGE SWITCH ---- */
+function pg(page,btn){
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));btn.classList.add('active');
+  ['dash','apps','emps'].forEach(p=>document.getElementById('pg-'+p).style.display='none');
+  document.getElementById('pg-'+page).style.display='block';
+  document.getElementById('ptitle').textContent={dash:'Dashboard',apps:'All Applications',emps:'Employees'}[page]||'';
+  if(page==='apps')renderApps();
+  if(page==='emps')renderEmps();
+}
+
+/* ---- DASHBOARD ---- */
+function parseAppDate(s){
+  if(!s)return null;
+  const d=new Date(s);if(!isNaN(d))return d;
+  const m=String(s).match(/(\d{1,2})\s+(\w{3})\s+(\d{4})/);
+  if(m){return new Date(m[3]+' '+m[2]+' '+m[1]);}
+  return null;
+}
+function renderDash(){
+  const now=new Date(),cm=now.getMonth(),cy=now.getFullYear();
+  const thisMonth=apps.filter(a=>{const d=parseAppDate(a.createdAt);return d&&d.getMonth()===cm&&d.getFullYear()===cy;});
+  document.getElementById('s1').textContent=apps.length;
+  document.getElementById('s2').textContent=thisMonth.length;
+  document.getElementById('s3').textContent=apps.filter(a=>['In Progress','Installation Started','Site Visit Completed','Quotation Sent'].includes(a.status)).length;
+  document.getElementById('s4').textContent=apps.filter(a=>a.status==='Applied').length;
+  document.getElementById('s5').textContent=emps.filter(e=>e.active!==false).length;
+  /* emp cards */
+  const colors=['#1a7a45','#185fa5','#92400e','#5b21b6','#991b1b','#0e7490'];
+  document.getElementById('ecards').innerHTML=emps.map((emp,i)=>{
+    const myApps=apps.filter(a=>a.assignedTo===emp.phone);
+    const done=myApps.filter(a=>a.status==='Completed').length;
+    const ini=(emp.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    return `<div class="ecard">
+      <div class="ech"><div class="eav" style="background:${colors[i%colors.length]}">${x(ini)}</div>
+        <div><div class="en">${x(emp.name)}</div><div class="er">${x(emp.jobTitle||'Employee')}</div></div></div>
+      <div class="estats">
+        <div class="estat"><div class="estat-val">${myApps.length}</div><div class="estat-lbl">Applications</div></div>
+        <div class="estat"><div class="estat-val">${done}</div><div class="estat-lbl">Completed</div></div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="openEmpDetail('${x(emp.id)}')">Details</button>
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="filterByEmp('${x(emp.phone)}')">View apps</button>
+      </div>
+    </div>`;
+  }).join('') || '<div style="color:var(--tx3);padding:1rem">No employees yet. Add one from the Employees page.</div>';
+  /* recent table */
+  const recent=apps.slice(0,6);
+  document.getElementById('recent-wrap').innerHTML=`<table><thead><tr><th>Customer</th><th>Employee</th><th>Service</th><th>Status</th><th>Actions</th></tr></thead><tbody>`+
+    recent.map(a=>`<tr><td><div style="font-weight:500">${x(a.name)}</div><div style="font-size:11px;color:var(--tx3)">${x(a.phone)}</div></td>
+      <td style="font-size:12px">${x(empName(a.assignedTo))}</td>
+      <td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x(a.service)}</td>
+      <td><span class="badge ${sb(a.status)}">${x(a.status)}</span></td>
+      <td><button class="btn btn-outline btn-sm" onclick="viewApp('${a.id}')">View</button></td>
+    </tr>`).join('')+`</tbody></table>`;
+}
+function empName(phone){if(!phone)return '—';const e=emps.find(x=>x.phone===phone);return e?e.name:phone;}
+
+function filterByEmp(phone){
+  const btn=document.querySelectorAll('.ni')[2]; // "All Applications" nav item
+  pg('apps',btn);
+  document.getElementById('empfilter').value=phone;renderApps();
+}
+
+/* ---- ALL APPS ---- */
+function renderApps(){
+  const q=(document.getElementById('asrch').value||'').toLowerCase();
+  const ef=document.getElementById('empfilter').value;
+  let d=apps;
+  if(atab_val!=='all')d=d.filter(a=>a.status===atab_val);
+  if(ef)d=d.filter(a=>a.assignedTo===ef);
+  if(q)d=d.filter(a=>a.name.toLowerCase().includes(q)||a.phone.includes(q)||(a.district||'').toLowerCase().includes(q));
+  const tb=document.getElementById('atbody');
+  if(!d.length){tb.innerHTML='<tr><td colspan="8"><div class="empty">No applications found</div></td></tr>';return;}
+  tb.innerHTML=d.map(a=>`<tr>
+    <td><div style="font-weight:500">${x(a.name)}</div><div style="font-size:11px;color:var(--tx3)">${x(a.email)}</div></td>
+    <td>${x(a.phone)}</td><td>${x(a.district)}</td>
+    <td style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x(a.service)}</td>
+    <td><span class="badge ${sb(a.status)}">${x(a.status)}</span></td>
+    <td style="font-size:12px"><strong>${x(empName(a.assignedTo))}</strong></td>
+    <td style="font-size:12px">${x(a.createdAt||'').split(',')[0]||'—'}</td>
+    <td><div style="display:flex;gap:5px">
+      <button class="btn btn-outline btn-sm" onclick="viewApp('${a.id}')">View</button>
+      <button class="btn btn-outline btn-sm" onclick="openUpd('${a.id}')">Update</button>
+    </div></td>
+  </tr>`).join('');
+}
+function atab(el,t){document.querySelectorAll('#pg-apps .tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');atab_val=t;renderApps();}
+
+/* ---- EMPLOYEES TABLE ---- */
+function renderEmps(){
+  const tb=document.getElementById('etbody');
+  if(!emps.length){tb.innerHTML='<tr><td colspan="6"><div class="empty">No employees yet</div></td></tr>';return;}
+  tb.innerHTML=emps.map(emp=>`<tr>
+    <td><div style="font-weight:500">${x(emp.name)}</div><div style="font-size:11px;color:var(--tx3)">${x(emp.email||'—')}</div></td>
+    <td>${x(emp.phone)}</td>
+    <td>${x(emp.jobTitle||'—')}</td>
+    <td style="font-size:12px">${x(emp.lastLogin||'Never')}</td>
+    <td><span class="badge ${emp.active?'bg-green':'bg-red'}">${emp.active?'Active':'Inactive'}</span></td>
+    <td><div style="display:flex;gap:5px">
+      <button class="btn btn-outline btn-sm" onclick="openEmpDetail('${emp.id}')">Details</button>
+      <button class="btn btn-outline btn-sm" onclick="editEmp('${emp.id}')">Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deactEmp('${emp.id}','${x(emp.name)}')">Remove</button>
+    </div></td>
+  </tr>`).join('');
+}
+
+/* ---- ADD APPLICATION ---- */
+function fillDropdowns(){
+  const sv=document.getElementById('asv');
+  sv.innerHTML='<option value="">Select service...</option>'+svcs.map(s=>`<option value="${x(s.title)}">${x(s.title)}</option>`).join('');
+  const empOpts='<option value="">Unassigned</option>'+emps.filter(e=>e.active!==false).map(e=>`<option value="${x(e.phone)}">${x(e.name)}</option>`).join('');
+  document.getElementById('aasgn').innerHTML=empOpts;
+  document.getElementById('updasgn').innerHTML=empOpts;
+  document.getElementById('empfilter').innerHTML='<option value="">All Employees</option>'+emps.map(e=>`<option value="${x(e.phone)}">${x(e.name)}</option>`).join('');
+}
+
+function openAdd(){
+  sfiles=[];
+  ['an','aph','aem','aal','avc','adi','abl','acp','amg'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ast').value='Odisha';document.getElementById('api').value='';
+  document.getElementById('asv').value='';document.getElementById('arf').value='';
+  document.getElementById('aasgn').value='';document.getElementById('adt').value='';document.getElementById('atm').value='';
+  renderFL();document.getElementById('addtitle').textContent='New Application';
+  document.getElementById('add-modal').classList.add('open');
+}
+
+async function saveApp(){
+  const n=v('an'),ph=v('aph'),em=v('aem'),al=v('aal'),vc=v('avc'),di=v('adi'),st=v('ast'),pi=v('api'),rf=v('arf'),sv=v('asv');
+  if(!n||!ph||!em||!al||!vc||!di||!st||!pi||!rf||!sv){toast('Fill all required (*) fields',true);return;}
+  const btn=document.getElementById('sbtn');btn.textContent='Saving...';btn.disabled=true;
+  try{
+    const docs={};
+    for(let i=0;i<sfiles.length;i++){const f=sfiles[i];docs[`doc_${i}`]={name:f.name,data:await rb64(f)};}
+    const res=await api('/api/applications',{name:n,phone:ph,email:em,addressLine:al,villageCity:vc,district:di,state:st,pincode:pi,roofType:rf,service:sv,monthlyBill:v('abl'),capacity:v('acp'),preferredDate:v('adt'),preferredTime:v('atm'),message:v('amg'),assignedTo:document.getElementById('aasgn').value,documents:docs});
+    syncFromBootstrap(res);renderDash();renderApps();closeM('add-modal');toast('Application saved!');
+  }catch(e){toast(e.message||'Save failed.',true);}
+  finally{btn.textContent='Save Application';btn.disabled=false;}
+}
+
+/* ---- UPDATE ---- */
+function openUpd(id){
+  const a=apps.find(z=>z.id===id);if(!a)return;
+  updId=id;document.getElementById('updtitle').textContent='Update – '+a.name;
+  document.getElementById('updst').value=a.status;
+  document.getElementById('updasgn').value=a.assignedTo||'';
+  document.getElementById('updnt').value=a.notes||'';
+  document.getElementById('upd-modal').classList.add('open');
+}
+async function submitUpd(){
+  try{
+    const res=await api('/api/applications/update',{id:updId,status:document.getElementById('updst').value,assignedTo:document.getElementById('updasgn').value,notes:document.getElementById('updnt').value});
+    syncFromBootstrap(res);renderDash();renderApps();closeM('upd-modal');toast('Updated!');
+  }catch(e){toast(e.message||'Update failed.',true);}
+}
+
+/* ---- EMPLOYEES ---- */
+function openAddEmp(){editEmpId=null;['en','eph','eem','epw'].forEach(id=>document.getElementById(id).value='');document.getElementById('ejt').value='Installation Staff';document.getElementById('eac').value='1';document.getElementById('empt').textContent='Add Employee';document.getElementById('emp-modal').classList.add('open');}
+function editEmp(id){
+  const emp=emps.find(e=>e.id===id);if(!emp)return;
+  editEmpId=id;document.getElementById('en').value=emp.name;document.getElementById('eph').value=emp.phone;document.getElementById('eem').value=emp.email||'';document.getElementById('ejt').value=emp.jobTitle||'Installation Staff';document.getElementById('epw').value='';document.getElementById('eac').value=emp.active?'1':'0';
+  document.getElementById('empt').textContent='Edit – '+emp.name;document.getElementById('emp-modal').classList.add('open');
+}
+async function saveEmp(){
+  const name=v('en'),phone=v('eph'),email=v('eem'),pw=v('epw'),jt=v('ejt'),ac=document.getElementById('eac').value;
+  if(!name||!phone){toast('Name and phone are required.',true);return;}
+  if(!editEmpId&&pw.length<6){toast('Password must be at least 6 characters.',true);return;}
+  const btn=document.getElementById('empsbtn');btn.textContent='Saving...';btn.disabled=true;
+  try{
+    let res;
+    if(editEmpId){res=await api('/api/employees/update',{id:editEmpId,name,phone,email,jobTitle:jt,active:ac==='1'});}
+    else{res=await api('/api/employees',{name,phone,email,password:pw,jobTitle:jt});}
+    syncFromBootstrap(res);
+    fillDropdowns();renderEmps();renderDash();closeM('emp-modal');toast('Employee saved!');
+  }catch(e){toast(e.message||'Save failed.',true);}
+  finally{btn.textContent=editEmpId?'Save Changes':'Add Employee';btn.disabled=false;}
+}
+async function deactEmp(id,name){
+  if(!confirm(`Remove employee "${name}"? They will be deactivated.`))return;
+  try{
+    const res=await api('/api/employees/delete',{id});
+    syncFromBootstrap(res);
+    fillDropdowns();renderEmps();renderDash();toast('Employee removed.');
+  }catch(e){toast(e.message||'Failed.',true);}
+}
+
+/* ---- VIEW ---- */
+function viewApp(id){
+  const a=apps.find(z=>z.id===id);if(!a)return;
+  document.getElementById('vname').textContent=a.name;
+  const docs=a.documents||{};
+  const dhtml=Object.values(docs).map(d=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--g4);border-radius:8px;border:1px solid var(--g3);font-size:12px;margin-bottom:6px">📄 ${x(d.name||'document')} <a style="margin-left:auto;color:var(--bl);font-size:11px;font-weight:500" href="${x(d.url||'#')}" target="_blank">Download</a></div>`).join('')||'<div style="color:var(--tx3);font-size:13px">No documents</div>';
+  document.getElementById('vbody').innerHTML=`<div class="dg">
+    <div class="dc"><div class="dct">Personal</div>${dr('Name',x(a.name))}${dr('Phone',x(a.phone))}${dr('Email',x(a.email))}${dr('Address',x(a.address||'—'))}</div>
+    <div class="dc"><div class="dct">Service</div>${dr('Service',x(a.service))}${dr('Roof Type',x(a.roofType||'—'))}${dr('Monthly Bill',a.monthlyBill?'₹'+x(a.monthlyBill):'—')}${dr('Capacity',x(a.capacity||'—'))}${dr('Preferred Date',x(a.preferredDate||'—'))}</div>
+    <div class="dc"><div class="dct">Status</div>${dr('Status','<span class="badge '+sb(a.status)+'">'+x(a.status)+'</span>')}${dr('Assigned To',x(empName(a.assignedTo)))}${dr('Notes',x(a.notes||'—'))}${dr('Applied On',x(a.createdAt||'—'))}${dr('Updated',x(a.updatedAt||'—'))}</div>
+    <div class="dc"><div class="dct">Documents</div>${dhtml}</div>
+  </div>`;
+  document.getElementById('veditbtn').onclick=()=>{closeM('view-modal');openUpd(id);};
+  document.getElementById('view-modal').classList.add('open');
+}
+function dr(l,val){return `<div class="dr2"><span class="dl">${x(l)}</span><span class="dv">${val}</span></div>`;}
+
+/* ---- FILES ---- */
+function hf(files){Array.from(files).forEach(f=>sfiles.push(f));renderFL();document.getElementById('dinp').value='';}
+function renderFL(){document.getElementById('flist').innerHTML=sfiles.map((f,i)=>`<div class="fitem">📎 <span class="fitem-nm">${x(f.name)}</span> <span style="color:var(--tx3);font-size:11px">(${(f.size/1024).toFixed(0)}KB)</span><button class="fitem-rm" onclick="sfiles.splice(${i},1);renderFL()">&times;</button></div>`).join('');}
+function rb64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(new Error('Read failed'));r.readAsDataURL(file);});}
+
+/* ---- UTILS ---- */
+function sb(s){const m={Applied:'bg-gray',Contacted:'bg-blue','Site Visit Scheduled':'bg-blue','Site Visit Completed':'bg-blue','Quotation Sent':'bg-amber','Installation Started':'bg-amber','In Progress':'bg-amber',Completed:'bg-green',Cancelled:'bg-red'};return m[s]||'bg-gray';}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mb').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
+function x(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function v(id){return document.getElementById(id).value.trim();}
+function toast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(err?' err':'');setTimeout(()=>t.className='toast',3000);}
+async function api(url,data){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const j=await r.json();if(!r.ok)throw new Error(j.message||'Request failed');return j;}
+</script>
+</body>
+</html>

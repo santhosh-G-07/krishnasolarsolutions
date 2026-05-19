@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KSS – Staff Sign-in</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --green-dark:#0d4a2a;--green-mid:#1a7a45;--green-bright:#22a85a;
+  --green-light:#d4f0df;--green-pale:#f0faf4;--cream:#faf8f3;
+  --text-dark:#0f1f14;--text-mid:#3d5c48;--text-muted:#7a9b85;
+  --border:#c8dfd1;--rd:#991b1b;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);min-height:100vh;color:var(--text-dark)}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding:1.1rem 3rem;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-box{width:38px;height:38px;border-radius:9px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--green-pale)}
+.logo-box img{width:100%;height:100%;object-fit:cover;display:block}
+.logo-info .brand{font-weight:500;font-size:15px;color:var(--text-dark)}
+.logo-info .tagline{font-size:11px;color:var(--text-muted)}
+.nav-links{display:flex;gap:1.5rem;align-items:center}
+.nav-links a{font-size:13px;color:var(--text-mid);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--green-dark)}
+
+.wrap{max-width:480px;margin:0 auto;padding:3rem 1.5rem 5rem}
+.eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.12em;font-weight:500;color:var(--green-mid);text-transform:uppercase;background:var(--green-light);padding:4px 12px;border-radius:20px;margin-bottom:1rem}
+.eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green-bright)}
+h1{font-family:'Fraunces',serif;font-size:32px;font-weight:700;line-height:1.18;color:var(--text-dark);margin-bottom:.6rem}
+h1 span{color:var(--green-mid)}
+.sub{font-size:14px;color:var(--text-muted);margin-bottom:2rem;line-height:1.6}
+
+.card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:2rem;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--green-dark),var(--green-bright))}
+
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;gap:1rem;flex-wrap:wrap}
+.card-head-text{flex:1;min-width:0}
+.card-eyebrow{font-size:10px;letter-spacing:.12em;font-weight:500;color:var(--text-muted);text-transform:uppercase;margin-bottom:.4rem}
+.card-title{font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:var(--text-dark);margin-bottom:.25rem}
+.card-sub{font-size:13px;color:var(--text-muted);line-height:1.5}
+
+.switch{display:inline-flex;background:var(--green-pale);border:1px solid var(--border);border-radius:10px;padding:3px;gap:2px;flex-shrink:0}
+.switch button{padding:7px 14px;border:none;border-radius:7px;background:transparent;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;opacity:.55}
+.switch button.active{background:var(--green-dark);color:#fff;opacity:1;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+
+.field{margin-bottom:1rem}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--text-mid);margin-bottom:5px}
+.field input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;color:var(--text-dark);background:var(--green-pale);font-family:'DM Sans',sans-serif;transition:border-color .2s,box-shadow .2s;outline:none}
+.field input:focus{border-color:var(--green-mid);box-shadow:0 0 0 3px rgba(26,122,69,.12);background:#fff}
+.field input::placeholder{color:var(--text-muted);font-size:13px}
+.pass-wrap{position:relative}
+.pass-wrap input{padding-right:48px}
+.show-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:12px;font-weight:500;color:var(--green-mid);cursor:pointer;font-family:'DM Sans',sans-serif}
+
+.btn-primary{width:100%;padding:12px;background:var(--green-dark);color:#fff;border:none;border-radius:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s,transform .1s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:.5rem}
+.btn-primary:hover{background:var(--green-mid)}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary svg{width:16px;height:16px}
+
+.foot{font-size:12px;color:var(--text-muted);text-align:center;margin-top:1.25rem;background:var(--green-pale);padding:10px 14px;border-radius:10px;border:1px dashed var(--border);line-height:1.55}
+.foot.admin-mode{background:#fff7ed;border-color:#fed7aa;color:#92400e}
+
+.back-link{display:inline-flex;align-items:center;gap:6px;margin-top:1.5rem;font-size:13px;color:var(--text-muted);text-decoration:none;padding:8px 14px;border-radius:8px;transition:all .15s}
+.back-link:hover{background:#fff;color:var(--green-mid)}
+
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:var(--green-dark);color:#fff;padding:.75rem 1.5rem;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999}
+.toast.show{opacity:1}
+
+@media(max-width:520px){
+  nav{padding:1rem 1.2rem}
+  .wrap{padding:2rem 1.2rem 3rem}
+  h1{font-size:26px}
+  .card{padding:1.5rem}
+  .card-head{flex-direction:column;align-items:stretch;gap:.75rem}
+  .switch{align-self:flex-end}
+}
+</style>
+</head>
+<body data-page="auth">
+
+<nav>
+  <a class="logo" href="index.html">
+    <div class="logo-box"><img src="assets/kss-logo.jpeg" alt="KSS"/></div>
+    <div class="logo-info">
+      <div class="brand">Krishna Solar Solutions</div>
+      <div class="tagline">Powering India's homes</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="auth.html">Customer login</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="eyebrow">Staff Access</div>
+  <h1>Sign in to your <span>workspace.</span></h1>
+  <p class="sub">For Krishna Solar Solutions team only. Employees and administrators sign in here.</p>
+
+  <form class="card" data-login-form id="staffForm">
+    <input type="hidden" name="role" value="employee" id="roleInput"/>
+
+    <div class="card-head">
+      <div class="card-head-text">
+        <div class="card-eyebrow" id="cardEyebrow">Team Member</div>
+        <div class="card-title" id="cardTitle">Employee login</div>
+        <div class="card-sub" id="cardSub">View and update the customer applications assigned to you.</div>
+      </div>
+      <div class="switch" role="tablist" aria-label="Choose role">
+        <button type="button" class="active" data-role="employee" onclick="setRole('employee')">Employee</button>
+        <button type="button" data-role="admin" onclick="setRole('admin')">Admin</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label id="userLabel">Phone or email</label>
+      <input name="username" type="text" required autocomplete="username" placeholder="Registered phone or email" id="userInput"/>
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <div class="pass-wrap">
+        <input name="password" type="password" id="lpass" required autocomplete="current-password" placeholder="Enter your password"/>
+        <button class="show-btn" type="button" onclick="togglePass('lpass',this)">Show</button>
+      </div>
+    </div>
+
+    <button class="btn-primary" type="submit">
+      <span id="btnLabel">Sign in as employee</span>
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+    </button>
+
+    <div class="foot" id="footHint">
+      Don't have access? Contact your administrator to create your account.<br>
+      Forgot your password? Ask your admin to reset it.
+    </div>
+  </form>
+
+  <a class="back-link" href="index.html">&larr; Back to home</a>
+</div>
+
+<div class="toast" data-toast></div>
+
+<script src="app.js"></script>
+<script>
+function togglePass(id,btn){
+  var i=document.getElementById(id);
+  if(i.type==='password'){i.type='text';btn.textContent='Hide';}
+  else{i.type='password';btn.textContent='Show';}
+}
+function setRole(role){
+  document.getElementById('roleInput').value=role;
+  document.querySelectorAll('.switch button').forEach(function(b){
+    b.classList.toggle('active', b.dataset.role===role);
+  });
+  var foot=document.getElementById('footHint');
+  if(role==='admin'){
+    document.getElementById('cardEyebrow').textContent='Administrator';
+    document.getElementById('cardTitle').textContent='Admin login';
+    document.getElementById('cardSub').textContent='Full access — manage applications, employees, services and products.';
+    document.getElementById('userLabel').textContent='Admin username or phone';
+    document.getElementById('userInput').placeholder='admin';
+    document.getElementById('btnLabel').textContent='Sign in as admin';
+    foot.classList.add('admin-mode');
+    foot.innerHTML='Admin access is restricted. Use the seeded backend admin account.';
+  }else{
+    document.getElementById('cardEyebrow').textContent='Team Member';
+    document.getElementById('cardTitle').textContent='Employee login';
+    document.getElementById('cardSub').textContent='View and update the customer applications assigned to you.';
+    document.getElementById('userLabel').textContent='Phone or email';
+    document.getElementById('userInput').placeholder='Registered phone or email';
+    document.getElementById('btnLabel').textContent='Sign in as employee';
+    foot.classList.remove('admin-mode');
+    foot.innerHTML="Don't have access? Contact your administrator to create your account.<br>Forgot your password? Ask your admin to reset it.";
+  }
+  document.getElementById('userInput').focus();
+}
+// allow direct deep-link, e.g. staff-login.html?role=admin
+(function(){
+  var m=location.search.match(/role=(admin|employee)/);
+  if(m && m[1]==='admin') setRole('admin');
+})();
+</script>
+</body>
+</html>

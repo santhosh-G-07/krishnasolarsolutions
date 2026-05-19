@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>KSS - Krishna Solar Solutions</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+    <style>
+      /* ── Savings Calculator ── */
+      .kss-calc-wrap {
+        max-width: 1100px; margin: 0 auto; padding: 0 1.5rem 1rem;
+        display: grid; grid-template-columns: 1fr 1.3fr; gap: 1.75rem; align-items: start;
+      }
+      .kss-input-card {
+        background: #fff; border: 1px solid #c8dfd1;
+        border-radius: 20px; padding: 2rem; position: relative; overflow: hidden;
+      }
+      .kss-input-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+        background: linear-gradient(90deg, #0d4a2a, #22a85a);
+      }
+      .kss-section-label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #7a9b85; font-weight: 500; margin-bottom: .4rem; }
+      .kss-section-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 600; color: #0f1f14; margin-bottom: 1.5rem; }
+      .kss-input-group { margin-bottom: 1.4rem; }
+      .kss-input-group > label { display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; color: #3d5c48; margin-bottom: 6px; }
+      .kss-input-group > label span { color: #1a7a45; font-weight: 500; }
+      .kss-inp-wrap { display: flex; border: 1px solid #c8dfd1; border-radius: 11px; overflow: hidden; background: #f0faf4; transition: box-shadow .2s; }
+      .kss-inp-wrap:focus-within { box-shadow: 0 0 0 3px rgba(26,122,69,.12); border-color: #1a7a45; background: #fff; }
+      .kss-inp-prefix { padding: 11px 13px; font-size: 14px; color: #7a9b85; border-right: 1px solid #c8dfd1; background: #fff; }
+      .kss-inp-wrap input {
+        flex: 1; padding: 11px 13px; border: none; background: transparent;
+        font-size: 15px; font-weight: 500; color: #0f1f14;
+        font-family: 'DM Sans', sans-serif; outline: none;
+      }
+      .kss-slider { width: 100%; margin-top: 8px; appearance: none; height: 5px; border-radius: 10px; background: #d4f0df; outline: none; cursor: pointer; }
+      .kss-slider::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #0d4a2a; cursor: pointer; border: 3px solid #fff; box-shadow: 0 0 0 2px #1a7a45; }
+      .kss-slider::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #0d4a2a; cursor: pointer; border: 3px solid #fff; }
+      .kss-btn-apply {
+        width: 100%; padding: 13px; background: #0d4a2a; color: #fff;
+        border: none; border-radius: 12px; font-size: 14px; font-weight: 500;
+        cursor: pointer; font-family: 'DM Sans', sans-serif;
+        transition: background .2s, transform .1s;
+        display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: .5rem;
+        text-decoration: none;
+      }
+      .kss-btn-apply:hover { background: #1a7a45; }
+      .kss-btn-apply:active { transform: scale(.98); }
+      .kss-btn-apply svg { width: 16px; height: 16px; }
+      .kss-results-col { display: flex; flex-direction: column; gap: 1.25rem; }
+      .kss-hero-result {
+        background: #0d4a2a; border-radius: 20px; padding: 2rem;
+        color: #fff; position: relative; overflow: hidden;
+      }
+      .kss-hero-result::after { content: '☀'; position: absolute; right: 1.5rem; top: 1rem; font-size: 80px; opacity: .08; line-height: 1; }
+      .kss-result-label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; opacity: .6; margin-bottom: .4rem; }
+      .kss-result-kw { font-family: 'Fraunces', serif; font-size: 44px; font-weight: 700; line-height: 1; margin-bottom: .3rem; }
+      .kss-result-kw span { font-size: 22px; font-weight: 400; opacity: .7; }
+      .kss-result-desc { font-size: 13px; opacity: .65; }
+      .kss-metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .kss-metric-card { background: #fff; border: 1px solid #c8dfd1; border-radius: 16px; padding: 1.25rem; }
+      .kss-metric-icon { font-size: 20px; margin-bottom: .5rem; }
+      .kss-metric-val { font-size: 24px; font-weight: 500; color: #0d4a2a; margin-bottom: 2px; font-family: 'Fraunces', serif; }
+      .kss-metric-lbl { font-size: 12px; color: #7a9b85; }
+      .kss-payback-card { background: #fff; border: 1px solid #c8dfd1; border-radius: 16px; padding: 1.5rem; }
+      .kss-payback-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+      .kss-payback-title { font-size: 13px; font-weight: 500; color: #0f1f14; }
+      .kss-payback-badge { font-size: 12px; font-weight: 500; background: #d4f0df; color: #0d4a2a; padding: 3px 10px; border-radius: 20px; }
+      .kss-timeline { position: relative; height: 10px; background: #f0faf4; border-radius: 10px; overflow: hidden; margin-bottom: .75rem; }
+      .kss-timeline-fill { height: 100%; background: linear-gradient(90deg, #0d4a2a, #22a85a); border-radius: 10px; transition: width .6s ease; }
+      .kss-timeline-labels { display: flex; justify-content: space-between; font-size: 11px; color: #7a9b85; }
+      .kss-co2-banner { background: #f0faf4; border: 1px solid #d4f0df; border-radius: 12px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 12px; }
+      .kss-co2-icon { font-size: 28px; }
+      .kss-co2-text { font-size: 12px; color: #3d5c48; line-height: 1.5; }
+      .kss-co2-text strong { color: #0d4a2a; font-size: 14px; }
+      @media(max-width:768px){
+        .kss-calc-wrap { grid-template-columns: 1fr; }
+        .kss-metrics-grid { grid-template-columns: 1fr 1fr; }
+      }
+    </style>
+  </head>
+  <body data-page="home">
+    <header class="site-header">
+      <a class="brand" href="#home" aria-label="KSS home">
+        <img src="assets/kss-logo.jpeg" alt="KSS logo">
+        <span>
+          <strong>KSS</strong>
+          <small>Krishna Solar Solutions</small>
+        </span>
+      </a>
+      <button class="nav-toggle" type="button" aria-label="Open menu" data-nav-toggle>Menu</button>
+      <nav class="site-nav" data-nav>
+        <div class="nav-dropdown">
+          <button type="button">Products</button>
+          <div class="dropdown-menu" data-product-menu></div>
+        </div>
+        <div class="nav-dropdown">
+          <button type="button">Services</button>
+          <div class="dropdown-menu" data-service-menu></div>
+        </div>
+        <a href="apply.html">Apply</a>
+        <a href="#contact">Contact Us</a>
+        <a href="#about">About Us</a>
+        <a href="auth.html">Register</a>
+        <a href="auth.html">Login</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" id="home">
+        <div class="hero-slider" aria-label="Solar benefits image slider" data-hero-slider>
+          <img class="hero-slide active" src="assets/solar-slide-home.png" alt="Solar panels with clean energy city landscape" data-hero-slide>
+          <img class="hero-slide" src="assets/solar-slide-environment.png" alt="Clean energy landscape with solar panels and wind turbine" data-hero-slide>
+          <img class="hero-slide" src="assets/solar-slide-install.png" alt="Solar technicians installing panels" data-hero-slide>
+          <img class="hero-slide" src="assets/solar-slide-rooftop.png" alt="Solar panel installation on a house rooftop" data-hero-slide>
+          <img class="hero-slide" src="assets/solar-slide-agri.png" alt="Solar pump installation in agricultural field" data-hero-slide>
+          <div class="hero-shade"></div>
+          <div class="quote-panel" data-quote-panel>
+            <span class="quote-kicker" data-quote-kicker>For Homes</span>
+            <p data-quote-text>Give your home the gift of clean, free energy - today and for generations to come.</p>
+            <small data-quote-subtext>A brighter home begins with a smarter choice.</small>
+            <div class="hero-actions">
+              <a class="button primary" href="apply.html">Apply for Solar</a>
+              <a class="button secondary glass-button" href="#services">View Services</a>
+              <a class="button ghost glass-button" href="assets/Krishna Solar Solutions Template.pdf" target="_blank" rel="noreferrer">Open Brochure</a>
+            </div>
+          </div>
+          <div class="hero-metrics" data-live-metrics></div>
+          <div class="slider-dots" data-slider-dots></div>
+        </div>
+      </section>
+
+      <section class="section band" id="services">
+        <div class="section-heading wide-heading">
+          <p class="eyebrow">Services</p>
+          <h2>Power Your Home & Farm with Clean Solar Energy.</h2>
+          <p>Affordable Solar Solutions for Homes, Businesses & Farms.</p>
+        </div>
+        <div class="card-grid" data-service-list></div>
+      </section>
+
+      <section class="section" id="products">
+        <div class="section-heading wide-heading">
+          <p class="eyebrow">Products</p>
+          <h2>Smart Solar Products for Every Energy Need</h2>
+          <p>Explore high-performance solar components designed for homes, businesses, and sustainable living.</p>
+        </div>
+        <div class="card-grid compact" data-product-list></div>
+      </section>
+
+      <section class="section why-solar-section">
+        <div class="why-content">
+          <p class="why-pill">Why Solar</p>
+          <h2>Save more. Live cleaner. Install smarter.</h2>
+          <p>We handle everything from site visit to final documentation, so you get real savings with zero hassle.</p>
+          <div class="why-actions">
+            <a class="button primary" href="apply.html">Get a free quote</a>
+            <a class="button secondary" href="#contact">Book a site visit</a>
+          </div>
+          <div class="why-stats">
+            <div><strong>30%</strong><span>Avg. bill reduction</span></div>
+            <div><strong data-why-installations>100+</strong><span>Homes installed</span></div>
+            <div><strong>7yr</strong><span>Service warranty</span></div>
+          </div>
+          <p class="why-testimonial">★★★★★ Clear guidance, fast response, and clean installation support.</p>
+          <div class="why-card-grid">
+            <article>
+              <span class="why-number">01</span>
+              <span class="why-icon">⚡</span>
+              <h3>Reduce power bills</h3>
+              <p>Solar sized correctly for your usage can cut long-term electricity costs significantly.</p>
+              <strong>Avg. 30% savings</strong>
+            </article>
+            <article>
+              <span class="why-number">02</span>
+              <span class="why-icon">✓</span>
+              <h3>Trackable work</h3>
+              <p>Live updates at every stage, from applied and started to in progress and completed.</p>
+              <strong>Real-time status</strong>
+            </article>
+            <article>
+              <span class="why-number">03</span>
+              <span class="why-icon">▣</span>
+              <h3>Safe documents</h3>
+              <p>Customer records, documents, and work notes are stored in one protected system.</p>
+              <strong>Secure records</strong>
+            </article>
+            <article>
+              <span class="why-number">04</span>
+              <span class="why-icon">★</span>
+              <h3>Complete service</h3>
+              <p>From product selection to site visit and installation, one team manages the journey.</p>
+              <strong>End-to-end care</strong>
+            </article>
+          </div>
+        </div>
+        <div class="why-visual energy-container" aria-label="Animated renewable energy visual">
+          <img src="assets/renewable-energy.png" class="main-image earth-rotate" alt="Renewable energy earth with solar panels and wind turbines">
+          <div class="earth-flow"></div>
+          <div class="sun-reflection"></div>
+          <div class="energy-particle particle-one"></div>
+          <div class="energy-particle particle-two"></div>
+          <div class="energy-particle particle-three"></div>
+          <div class="fan fan1"></div>
+          <div class="fan fan2"></div>
+          <div class="fan fan3"></div>
+          <div class="floating-tile tile-one">Clean power planning</div>
+          <div class="floating-tile tile-two">Smart solar journey</div>
+        </div>
+      </section>
+
+      <section class="section band" id="calculator">
+        <div class="section-heading">
+          <p class="eyebrow">Savings Calculator</p>
+          <h2>Check how much you can save with solar.</h2>
+          <p>Enter your electricity bill details. Final capacity is confirmed after our site visit.</p>
+        </div>
+
+        <div class="kss-calc-wrap">
+          <!-- INPUT -->
+          <div class="kss-input-card">
+            <div class="kss-section-label">Your electricity details</div>
+            <div class="kss-section-title">Calculate my savings</div>
+
+            <div class="kss-input-group">
+              <label>Average monthly electricity bill <span id="kss-bill-display">₹2,500</span></label>
+              <div class="kss-inp-wrap">
+                <span class="kss-inp-prefix">₹</span>
+                <input type="number" id="kss-bill" value="2500" min="500" max="50000" step="100" oninput="kssSync('bill');kssCalc()"/>
+              </div>
+              <input type="range" class="kss-slider" id="kss-bill-slider" min="500" max="30000" step="100" value="2500" oninput="kssSyncInput('bill');kssCalc()"/>
+            </div>
+
+            <div class="kss-input-group">
+              <label>Average electricity unit rate <span id="kss-rate-display">₹8 / kWh</span></label>
+              <div class="kss-inp-wrap">
+                <span class="kss-inp-prefix">₹</span>
+                <input type="number" id="kss-rate" value="8" min="3" max="20" step="0.5" oninput="kssSync('rate');kssCalc()"/>
+              </div>
+              <input type="range" class="kss-slider" id="kss-rate-slider" min="3" max="20" step="0.5" value="8" oninput="kssSyncInput('rate');kssCalc()"/>
+            </div>
+
+            <a class="kss-btn-apply" href="apply.html">
+              Apply with these details
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+            </a>
+          </div>
+
+          <!-- RESULTS -->
+          <div class="kss-results-col">
+            <div class="kss-hero-result">
+              <div class="kss-result-label">Recommended system size</div>
+              <div class="kss-result-kw" id="kss-kw-out">3 <span>kW</span></div>
+              <div class="kss-result-desc">Solar panel system for your home</div>
+            </div>
+
+            <div class="kss-metrics-grid">
+              <div class="kss-metric-card">
+                <div class="kss-metric-icon">💸</div>
+                <div class="kss-metric-val" id="kss-monthly-out">₹2,050</div>
+                <div class="kss-metric-lbl">Monthly savings</div>
+              </div>
+              <div class="kss-metric-card">
+                <div class="kss-metric-icon">📅</div>
+                <div class="kss-metric-val" id="kss-yearly-out">₹24,600</div>
+                <div class="kss-metric-lbl">Yearly savings</div>
+              </div>
+              <div class="kss-metric-card">
+                <div class="kss-metric-icon">⚡</div>
+                <div class="kss-metric-val" id="kss-units-out">313</div>
+                <div class="kss-metric-lbl">Units/month consumed</div>
+              </div>
+              <div class="kss-metric-card">
+                <div class="kss-metric-icon">🏠</div>
+                <div class="kss-metric-val" id="kss-cost-out">₹1.8L</div>
+                <div class="kss-metric-lbl">Est. system cost</div>
+              </div>
+            </div>
+
+            <div class="kss-payback-card">
+              <div class="kss-payback-header">
+                <div class="kss-payback-title">Estimated payback period</div>
+                <div class="kss-payback-badge" id="kss-payback-out">5–6 years</div>
+              </div>
+              <div class="kss-timeline"><div class="kss-timeline-fill" id="kss-payback-bar" style="width:55%"></div></div>
+              <div class="kss-timeline-labels"><span>0 yr</span><span>5 yr</span><span>10 yr</span><span>25 yr (lifetime)</span></div>
+            </div>
+
+            <div class="kss-co2-banner">
+              <div class="kss-co2-icon">🌱</div>
+              <div class="kss-co2-text">
+                Your system will save approx.<br>
+                <strong id="kss-co2-out">1.8 tonnes of CO₂</strong> every year.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="contact">
+        <div class="section-heading">
+          <p class="eyebrow">Contact Us</p>
+          <h2>Let's Power Your Future Together</h2>
+          <p>Connect with us for smart, reliable, and affordable solar solutions.</p>
+        </div>
+        <div class="contact-grid">
+          <article class="contact-card" data-contact-card>
+            <span>Call Us</span>
+            <button class="contact-trigger" type="button" data-contact-trigger>8117845317</button>
+            <div class="contact-actions">
+              <a class="mini-button" href="tel:+918117845317">Call</a>
+              <a class="mini-button" href="https://wa.me/918117845317" target="_blank" rel="noreferrer">WhatsApp</a>
+              <button class="mini-button" type="button" data-copy="8117845317">Copy</button>
+            </div>
+          </article>
+          <article class="contact-card" data-contact-card>
+            <span>Email Support</span>
+            <button class="contact-trigger" type="button" data-contact-trigger>krishnamoharana011@gmail.com</button>
+            <div class="contact-actions">
+              <a class="mini-button" href="mailto:krishnamoharana011@gmail.com">Send Mail</a>
+              <button class="mini-button" type="button" data-copy="krishnamoharana011@gmail.com">Copy</button>
+            </div>
+          </article>
+          <article class="contact-card">
+            <span>Visit Our Office</span>
+            <strong>KSS</strong>
+            <a class="map-link" href="https://share.google/neok5yBa11cMHkvuz" target="_blank" rel="noreferrer">Open Google Map</a>
+          </article>
+        </div>
+      </section>
+
+      <section class="section band" id="about">
+        <div class="about-pro-layout">
+          <div class="about-copy">
+            <p class="trust-pill">About Us</p>
+            <h2>Reliable solar support from enquiry to completion.</h2>
+            <p>KSS - Krishna Solar Solutions guides you through product selection, installation planning, document collection, work tracking, and service updates with a clear, stress-free process.</p>
+            <div class="trust-row">
+              <span>Licensed installer</span>
+              <span>Warranty guidance</span>
+              <span>Secure documents</span>
+            </div>
+            <div class="about-actions">
+              <a class="button primary" href="apply.html">Get a free quote</a>
+              <a class="button secondary" href="#services">Explore services</a>
+            </div>
+          </div>
+          <div class="about-stat-grid" data-about-stats></div>
+        </div>
+        <div class="process-row">
+          <p class="section-mini-title">Our process</p>
+          <div class="process-grid">
+            <article><span>01</span><h4>Enquiry</h4><p>Share your requirement and KSS suggests the right solar option.</p></article>
+            <article><span>02</span><h4>Site visit</h4><p>Team checks roof, load, documents, and installation feasibility.</p></article>
+            <article><span>03</span><h4>Installation</h4><p>Certified team installs and updates the project status clearly.</p></article>
+            <article><span>04</span><h4>Handover</h4><p>Warranty, documents, monitoring guidance, and support are shared.</p></article>
+          </div>
+        </div>
+        <div class="choose-strip">
+          <article><strong>Fast turnaround</strong><span>Planned site visits and clear updates.</span></article>
+          <article><strong>Dedicated team</strong><span>One team supports the full journey.</span></article>
+          <article><strong>Secure records</strong><span>Customer documents stay organized.</span></article>
+          <article><strong>After-sales care</strong><span>Support continues after installation.</span></article>
+        </div>
+        <div class="reviews-section">
+          <div class="reviews-heading">
+            <div>
+              <p class="eyebrow">Customer Reviews</p>
+              <h3>What customers say about KSS</h3>
+              <p>Real feedback from homeowners, businesses, and solar applicants.</p>
+            </div>
+            <a class="mini-button" href="https://share.google/neok5yBa11cMHkvuz" target="_blank" rel="noreferrer">View on Google Maps</a>
+          </div>
+          <div class="rating-summary">
+            <div class="rating-score">
+              <strong>4.8</strong>
+              <span>★★★★★</span>
+              <small>Overall rating</small>
+            </div>
+            <div class="rating-bars">
+              <div><span>5★</span><meter min="0" max="68" value="42"></meter><small>42</small></div>
+              <div><span>4★</span><meter min="0" max="68" value="18"></meter><small>18</small></div>
+              <div><span>3★</span><meter min="0" max="68" value="5"></meter><small>5</small></div>
+              <div><span>2★</span><meter min="0" max="68" value="2"></meter><small>2</small></div>
+              <div><span>1★</span><meter min="0" max="68" value="1"></meter><small>1</small></div>
+            </div>
+            <div class="rating-badges">
+              <span>68 verified reviews</span>
+              <span>Google verified</span>
+              <span>Top-rated installer</span>
+            </div>
+          </div>
+          <div class="review-feature-grid">
+            <article><span>HC</span><div><strong>Good installation support</strong><small>Home installation</small></div><p>Team explained the solar process clearly and updated every stage on time.</p></article>
+            <article><span>RC</span><div><strong>Helpful for documents</strong><small>Residential client</small></div><p>KSS helped with electricity bill, roof photo, and other required documents smoothly.</p></article>
+            <article><span>SA</span><div><strong>Quick response</strong><small>Solar applicant</small></div><p>Calls and WhatsApp updates were fast, and the site visit was handled professionally.</p></article>
+            <article><span>KC</span><div><strong>Clean work progress</strong><small>Commercial project</small></div><p>The work status tracking made it easy to know what was pending and completed.</p></article>
+          </div>
+          <div class="reviews-marquee" aria-label="Sliding customer reviews">
+            <div class="reviews-track">
+              <article class="review-card"><strong>★★★★★</strong><h4>Good installation support</h4><p>Team explained the solar process clearly and updated every stage on time.</p><span>- Home customer</span></article>
+              <article class="review-card"><strong>★★★★★</strong><h4>Helpful for documents</h4><p>KSS helped with electricity bill, roof photo, and other required documents smoothly.</p><span>- Residential client</span></article>
+              <article class="review-card"><strong>★★★★★</strong><h4>Quick response</h4><p>Calls and WhatsApp updates were fast, and the team handled the site visit professionally.</p><span>- Solar applicant</span></article>
+              <article class="review-card"><strong>★★★★☆</strong><h4>Clean work progress</h4><p>The work status tracking made it easy to know what was pending and what was completed.</p><span>- KSS customer</span></article>
+              <article class="review-card"><strong>★★★★★</strong><h4>Good installation support</h4><p>Team explained the solar process clearly and updated every stage on time.</p><span>- Home customer</span></article>
+              <article class="review-card"><strong>★★★★★</strong><h4>Helpful for documents</h4><p>KSS helped with electricity bill, roof photo, and other required documents smoothly.</p><span>- Residential client</span></article>
+              <article class="review-card"><strong>★★★★★</strong><h4>Quick response</h4><p>Calls and WhatsApp updates were fast, and the team handled the site visit professionally.</p><span>- Solar applicant</span></article>
+              <article class="review-card"><strong>★★★★☆</strong><h4>Clean work progress</h4><p>The work status tracking made it easy to know what was pending and what was completed.</p><span>- KSS customer</span></article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <dialog class="detail-dialog" data-detail-dialog>
+      <button class="dialog-close" type="button" aria-label="Close details" data-close-dialog>Close</button>
+      <div data-detail-content></div>
+    </dialog>
+
+    <div class="toast" data-toast></div>
+    <script src="app.js"></script>
+    <script src="chatbot.js" defer></script>
+    <script>
+      function kssSync(id){
+        var v=document.getElementById('kss-'+id).value;
+        document.getElementById('kss-'+id+'-slider').value=v;
+        kssUpdateDisplay(id,v);
+      }
+      function kssSyncInput(id){
+        var v=document.getElementById('kss-'+id+'-slider').value;
+        document.getElementById('kss-'+id).value=v;
+        kssUpdateDisplay(id,v);
+      }
+      function kssUpdateDisplay(id,v){
+        if(id==='bill') document.getElementById('kss-bill-display').textContent='₹'+Number(v).toLocaleString('en-IN');
+        if(id==='rate') document.getElementById('kss-rate-display').textContent='₹'+Number(v).toFixed(1)+' / kWh';
+      }
+      function kssFmt(n){ return n>=100000?'₹'+(n/100000).toFixed(1)+'L':'₹'+Math.round(n).toLocaleString('en-IN'); }
+      function kssCalc(){
+        var bill=parseFloat(document.getElementById('kss-bill').value)||2500;
+        var rate=parseFloat(document.getElementById('kss-rate').value)||8;
+        var units=Math.round(bill/rate);
+        var kw=Math.max(1,Math.round(units/100));
+        var solarUnits=kw*120;
+        var save=Math.round(Math.min(solarUnits,units)*rate);
+        var yearly=save*12;
+        var cost=kw*60000;
+        var paybackYrs=yearly>0?cost/yearly:0;
+        var co2=((solarUnits*12)*0.82/1000).toFixed(1);
+        var pb,pct;
+        if(paybackYrs<4){pb='3–4 years';pct=25;}
+        else if(paybackYrs<5){pb='4–5 years';pct=38;}
+        else if(paybackYrs<6){pb='5–6 years';pct=50;}
+        else if(paybackYrs<8){pb='6–8 years';pct=65;}
+        else{pb='8+ years';pct=80;}
+        document.getElementById('kss-kw-out').innerHTML=kw+' <span>kW</span>';
+        document.getElementById('kss-monthly-out').textContent=kssFmt(save);
+        document.getElementById('kss-yearly-out').textContent=kssFmt(yearly);
+        document.getElementById('kss-units-out').textContent=units;
+        document.getElementById('kss-cost-out').textContent=kssFmt(cost);
+        document.getElementById('kss-payback-out').textContent=pb;
+        document.getElementById('kss-payback-bar').style.width=pct+'%';
+        document.getElementById('kss-co2-out').textContent=co2+' tonnes of CO₂';
+      }
+      kssCalc();
+    </script>
+  </body>
+</html>
