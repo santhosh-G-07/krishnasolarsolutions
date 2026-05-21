@@ -12,6 +12,7 @@
     messages: [],
     open: false,
     busy: false,
+    menuOpen: false,
     lead: { mode: false, submitted: false },
     sessionId: null,
   };
@@ -92,6 +93,10 @@
   .kss-bot-send:hover{transform:scale(1.06)}
   .kss-bot-send:disabled{opacity:.55;cursor:not-allowed;transform:none}
   .kss-bot-send svg{width:18px;height:18px}
+  .kss-bot-menu-row{background:#fff;display:flex;justify-content:flex-start;padding:0 12px 10px}
+  .kss-bot-menu-btn{align-items:center;background:#f0faf4;border:1px solid #c8dfd1;border-radius:50%;color:#0d4a2a;cursor:pointer;display:inline-flex;height:38px;justify-content:center;padding:0;width:38px}
+  .kss-bot-menu-btn:hover{background:#d4f0df;border-color:#1a7a45}
+  .kss-bot-menu-btn svg{fill:none;height:19px;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:2;width:19px}
   .kss-bot-lead{margin-top:6px;background:#fff;border:1px solid #d4f0df;border-radius:14px;padding:12px}
   .kss-bot-lead .lt{font-size:13px;font-weight:600;color:#0d4a2a;margin-bottom:8px}
   .kss-bot-lead .ls{font-size:11.5px;color:#3d5c48;margin-bottom:10px;line-height:1.4}
@@ -144,6 +149,15 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
       </button>
     </div>
+    <div class="kss-bot-menu-row">
+      <button class="kss-bot-menu-btn" id="kss-bot-menu-btn" type="button" aria-label="Show quick options">
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="M4 6h16"/>
+          <path d="M4 12h16"/>
+          <path d="M4 18h16"/>
+        </svg>
+      </button>
+    </div>
     <div class="kss-bot-foot">KSS Solar Solutions · Powering India's homes</div>
   `;
   document.body.appendChild(win);
@@ -159,6 +173,7 @@
   const chipsEl = win.querySelector("#kss-bot-chips");
   const inputEl = win.querySelector("#kss-bot-input");
   const sendEl = win.querySelector("#kss-bot-send");
+  const menuEl = win.querySelector("#kss-bot-menu-btn");
   const closeEl = win.querySelector(".x");
 
   /* ---------- state load/save ---------- */
@@ -173,12 +188,12 @@
   /* ---------- render ---------- */
   function renderChips() {
     chipsEl.innerHTML = "";
-    if (STATE.messages.length > 2 || STATE.busy) { chipsEl.classList.add("hidden"); return; }
+    if ((STATE.messages.length > 2 && !STATE.menuOpen) || STATE.busy) { chipsEl.classList.add("hidden"); return; }
     chipsEl.classList.remove("hidden");
     CHIPS.forEach(text => {
       const b = document.createElement("button");
       b.className = "kss-bot-chip"; b.textContent = text;
-      b.onclick = () => { inputEl.value = text; sendMessage(); };
+      b.onclick = () => { STATE.menuOpen = false; inputEl.value = text; sendMessage(); };
       chipsEl.appendChild(b);
     });
   }
@@ -259,6 +274,44 @@
     renderChips();
   }
 
+  function localSolarReply(text) {
+    const q = String(text || "").toLowerCase();
+    if (q.includes("subsidy")) {
+      return {
+        reply: "**Solar subsidy info:** Residential rooftop solar subsidy depends on current government rules, system size, and eligibility. KSS can help check documents, DISCOM process, site feasibility, and guide you before application.\n\nFor exact subsidy amount, share your monthly bill, location, and roof type.",
+        leadCapture: false
+      };
+    }
+    if (q.includes("saving") || q.includes("calculate") || q.includes("bill")) {
+      return {
+        reply: "**Savings estimate:** Solar savings mainly depend on your monthly bill, unit rate, roof space, and system size. As a quick idea, higher monthly bills usually recover investment faster.\n\nYou can use the website calculator, or share your average bill and KSS can suggest an approximate kW size.",
+        leadCapture: false
+      };
+    }
+    if (q.includes("book") || q.includes("visit") || q.includes("callback") || q.includes("contact")) {
+      return {
+        reply: "**Sure, KSS can arrange a site visit.** Please share your name, mobile number, and location so the team can call you and confirm timing.",
+        leadCapture: true
+      };
+    }
+    if (q.includes("on-grid") || q.includes("ongrid")) {
+      return {
+        reply: "**On-grid solar** is connected to your electricity meter and grid. It helps reduce electricity bills during daytime generation. If net-metering is available, extra power can be adjusted as per local DISCOM rules.",
+        leadCapture: false
+      };
+    }
+    if (q.includes("hybrid") || q.includes("off-grid") || q.includes("offgrid")) {
+      return {
+        reply: "**Off-grid solar** uses batteries and works independently from the grid. **Hybrid solar** combines grid connection with battery backup. Hybrid is useful when you want savings plus backup, but it costs more than normal on-grid solar.",
+        leadCapture: false
+      };
+    }
+    return {
+      reply: "I can help with solar system types, savings estimate, subsidy guidance, site visits, and KSS contact support.\n\nTap the menu icon below to choose a quick option, or ask your question directly.",
+      leadCapture: false
+    };
+  }
+
   /* ---------- send ---------- */
   async function sendMessage() {
     const text = inputEl.value.trim();
@@ -279,20 +332,25 @@
       });
       const j = await r.json();
       clearTyping();
-      const reply = j.reply || "Sorry, assistant is temporarily unavailable.";
+      const local = localSolarReply(text);
+      const reply = j.fallback ? local.reply : (j.reply || local.reply);
       const botMsg = { role: "assistant", content: reply, time: nowTime() };
       STATE.messages.push(botMsg);
       appendMsg("assistant", reply, botMsg.time);
       saveHistory();
-      if (j.leadCapture && !STATE.lead.submitted) {
+      if ((j.leadCapture || (j.fallback && local.leadCapture)) && !STATE.lead.submitted) {
         setTimeout(appendLeadForm, 350);
       }
     } catch (e) {
       clearTyping();
-      const fallback = "Sorry, assistant is temporarily unavailable. Please try again or contact KSS directly.";
+      const local = localSolarReply(text);
+      const fallback = local.reply;
       STATE.messages.push({ role: "assistant", content: fallback, time: nowTime() });
       appendMsg("assistant", fallback);
       saveHistory();
+      if (local.leadCapture && !STATE.lead.submitted) {
+        setTimeout(appendLeadForm, 350);
+      }
     }
     STATE.busy = false;
     sendEl.disabled = false;
@@ -312,6 +370,11 @@
   fab.onclick = () => STATE.open ? closeChat() : openChat();
   closeEl.onclick = closeChat;
   sendEl.onclick = sendMessage;
+  menuEl.onclick = () => {
+    STATE.menuOpen = true;
+    renderChips();
+    chipsEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  };
   inputEl.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); sendMessage(); } });
 
   /* ---------- init ---------- */

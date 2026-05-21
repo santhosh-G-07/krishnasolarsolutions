@@ -49,6 +49,28 @@
     text-decoration: none; transition: color .2s;
   }
   .nav-links a:hover { color: var(--green-dark); }
+  .home-pill {
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    color: var(--green-dark) !important;
+    display: inline-flex;
+    font-weight: 600 !important;
+    height: 42px;
+    justify-content: center;
+    padding: 0;
+    width: 42px;
+  }
+  .home-pill:hover { background: var(--green-pale); }
+  .home-pill svg {
+    fill: none;
+    height: 20px;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    width: 20px;
+  }
 
   .hero {
     padding: 3.5rem 3rem 2rem;
@@ -217,10 +239,74 @@
 
   @media(max-width:768px){
     nav { padding: 1rem 1.2rem; }
+    .logo-info .tagline { display: none; }
+    .nav-links { gap: .75rem; }
+    .nav-links a:not(.home-pill) { display: none; }
+    .home-pill { height: 40px; width: 40px; }
     .hero { padding: 2rem 1.2rem 1.5rem; }
     .hero-title { font-size: 28px; }
     .cards-grid { grid-template-columns: 1fr; padding: 0 1.2rem 2rem; }
     .field-row { grid-template-columns: 1fr; }
+  }
+  @media(max-width:480px){
+    nav {
+      gap: 12px;
+      padding: .75rem .9rem;
+    }
+    .logo-box {
+      width: 34px;
+      height: 34px;
+    }
+    .logo-info .brand {
+      font-size: 13px;
+      max-width: 145px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .home-pill {
+      height: 38px;
+      width: 38px;
+    }
+    .hero {
+      padding: 1.6rem .95rem 1.15rem;
+    }
+    .hero-tag {
+      font-size: 10px;
+      margin-bottom: .95rem;
+    }
+    .hero-title {
+      font-size: clamp(28px, 10vw, 38px);
+      line-height: 1.12;
+    }
+    .hero-sub {
+      font-size: 14px;
+    }
+    .cards-grid {
+      gap: 1rem;
+      padding: 0 .95rem 2rem;
+    }
+    .card {
+      border-radius: 14px;
+      padding: 1.25rem;
+    }
+    .card-title {
+      font-size: 20px;
+    }
+    .tabs {
+      overflow-x: auto;
+    }
+    .tab-btn {
+      min-width: 90px;
+    }
+    .btn,
+    .show-btn {
+      min-height: 44px;
+    }
+    .field input,
+    .field select {
+      font-size: 16px;
+    }
   }
 </style>
 </head>
@@ -235,6 +321,12 @@
     </div>
   </a>
   <div class="nav-links">
+    <a class="home-pill" href="index.html" aria-label="Back to home">
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="M3 11.5 12 4l9 7.5"/>
+        <path d="M5 10.5V20h5v-5h4v5h5v-9.5"/>
+      </svg>
+    </a>
     <a href="index.html#services">Services</a>
     <a href="index.html#products">Products</a>
     <a href="apply.html">Apply</a>

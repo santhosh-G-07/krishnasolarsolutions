@@ -385,6 +385,7 @@ function syncBootstrap(data) {
 
 function bindCommon() {
   bindNav();
+  bindFloatingContact();
   bindPasswordToggles();
   bindCopyActions();
   const logout = document.querySelector("[data-logout]");
@@ -395,8 +396,41 @@ function bindNav() {
   const toggle = document.querySelector("[data-nav-toggle]");
   const nav = document.querySelector("[data-nav]");
   if (!toggle || !nav) return;
-  toggle.addEventListener("click", () => nav.classList.toggle("open"));
-  nav.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => nav.classList.remove("open")));
+  toggle.addEventListener("click", () => {
+    const isOpen = nav.classList.toggle("open");
+    toggle.setAttribute("aria-expanded", String(isOpen));
+  });
+  nav.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => {
+    nav.classList.remove("open");
+    toggle.setAttribute("aria-expanded", "false");
+  }));
+}
+
+function bindFloatingContact() {
+  const root = document.querySelector("[data-contact-float]");
+  const toggle = document.querySelector("[data-contact-float-toggle]");
+  if (!root || !toggle) return;
+  toggle.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const isOpen = root.classList.toggle("open");
+    toggle.setAttribute("aria-expanded", String(isOpen));
+  });
+  root.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => {
+      root.classList.remove("open");
+      toggle.setAttribute("aria-expanded", "false");
+    });
+  });
+  document.addEventListener("click", (event) => {
+    if (root.contains(event.target)) return;
+    root.classList.remove("open");
+    toggle.setAttribute("aria-expanded", "false");
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    root.classList.remove("open");
+    toggle.setAttribute("aria-expanded", "false");
+  });
 }
 
 function bindPasswordToggles() {

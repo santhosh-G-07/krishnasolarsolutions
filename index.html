@@ -138,7 +138,6 @@
           <small>Krishna Solar Solutions</small>
         </span>
       </a>
-      <button class="nav-toggle" type="button" aria-label="Open menu" data-nav-toggle>Menu</button>
       <nav class="site-nav" data-nav>
         <div class="nav-dropdown">
           <button type="button">Products</button>
@@ -151,9 +150,16 @@
         <a href="apply.html">Apply</a>
         <a href="#contact">Contact Us</a>
         <a href="#about">About Us</a>
-        <a href="auth.html">Register</a>
-        <a href="auth.html">Login</a>
       </nav>
+      <div class="header-actions" aria-label="Account actions">
+        <a class="auth-link auth-register" href="auth.html">Register</a>
+        <a class="auth-link auth-login" href="auth.html">Login</a>
+      </div>
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" data-nav-toggle>
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </header>
 
     <main>
@@ -471,6 +477,18 @@
     </dialog>
 
     <div class="toast" data-toast></div>
+    <div class="contact-float" data-contact-float>
+      <button class="contact-float-main" type="button" aria-label="Open quick contact options" aria-expanded="false" data-contact-float-toggle>
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.91.33 1.8.63 2.65a2 2 0 0 1-.45 2.11L8.09 9.69a16 16 0 0 0 6.22 6.22l1.21-1.2a2 2 0 0 1 2.11-.45c.85.3 1.74.51 2.65.63A2 2 0 0 1 22 16.92z"/>
+        </svg>
+      </button>
+      <div class="contact-float-menu" aria-label="Quick contact options">
+        <a href="https://wa.me/918117845317" target="_blank" rel="noreferrer">WhatsApp</a>
+        <a href="tel:+918117845317">Call</a>
+        <a href="mailto:krishnamoharana011@gmail.com">Mail</a>
+      </div>
+    </div>
     <script src="app.js"></script>
     <script src="chatbot.js" defer></script>
     <script>
