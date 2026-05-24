@@ -10,6 +10,7 @@ import re
 import secrets
 import smtplib
 import time
+import urllib.parse
 
 import psycopg2
 import psycopg2.extras
@@ -22,6 +23,8 @@ UPLOAD_DIR = ROOT / "uploads"
 PORT = int(os.environ.get("PORT", "3000"))
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "satabdeepersonal@gmail.com")
 NOTIFICATION_EMAIL = os.environ.get("NOTIFICATION_EMAIL", ADMIN_EMAIL)
+DB_READY = True
+DB_ERROR = ""
 PHONE_RE = re.compile(r"^[6-9]\d{9}$")
 PIN_RE = re.compile(r"^\d{6}$")
 EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
@@ -101,6 +104,16 @@ def now():
 
 def make_id(prefix):
     return f"{prefix}-{int(time.time() * 1000)}-{secrets.token_hex(3)}"
+
+
+def make_slug(value):
+    slug = re.sub(r"[^a-z0-9]+", "-", str(value or "").lower()).strip("-")
+    return slug or "service"
+
+
+def normalize_price(value):
+    digits = re.sub(r"[^0-9]", "", str(value or ""))
+    return int(digits) if digits else 0
 
 
 def hash_password(password, salt=None):
@@ -338,9 +351,13 @@ def init_db():
 def public_service(service):
     data = json.loads(service["payload"] or "{}")
     data["id"] = service["id"]
+    data["slug"] = make_slug(data.get("slug") or service["id"] or service["title"])
     data["title"] = service["title"]
     data["badge"] = service["badge"] or data.get("badge", "")
     data["description"] = service["description"] or data.get("description", "")
+    data["fullDescription"] = data.get("fullDescription") or data.get("tagline") or data["description"]
+    data["whoFor"] = data.get("whoFor") or data.get("audience") or ""
+    data["startingPrice"] = normalize_price(data.get("startingPrice") or data.get("starting_price") or data.get("pricing"))
     data["sortOrder"] = service["sort_order"]
     data["active"] = bool(service["active"])
     data["type"] = "service"
@@ -350,9 +367,14 @@ def public_service(service):
 def public_product(product):
     data = json.loads(product["payload"] or "{}")
     data["id"] = product["id"]
+    data["slug"] = make_slug(data.get("slug") or product["id"] or product["title"])
     data["title"] = product["title"]
     data["badge"] = product["badge"] or data.get("badge", "")
     data["description"] = product["description"] or data.get("description", "")
+    data["fullDescription"] = data.get("fullDescription") or data["description"]
+    data["categoryIcon"] = data.get("categoryIcon") or data.get("iconName") or data.get("icon") or "panel"
+    data["startingPrice"] = normalize_price(data.get("startingPrice") or data.get("starting_price") or data.get("pricing"))
+    data["priceNote"] = data.get("priceNote") or "Price varies by capacity, brand, and project requirement."
     data["sortOrder"] = product["sort_order"]
     data["active"] = bool(product["active"])
     data["type"] = "product"
@@ -438,6 +460,33 @@ def bootstrap():
         "services": [public_service(s) for s in services],
         "products": [public_product(p) for p in products],
         "businessSettings": public_business_settings(bs_row),
+    }
+
+
+def offline_bootstrap():
+    return {
+        "users": [],
+        "customers": [],
+        "employees": [],
+        "applications": [],
+        "notifications": [],
+        "services": [],
+        "products": [],
+        "businessSettings": {
+            "businessName": "Krishna Solar Solutions",
+            "tagline": "Powering India's homes",
+            "businessEmail": ADMIN_EMAIL,
+            "businessMobile": "",
+            "whatsappNumber": "",
+            "officeAddress": "",
+            "logo": "",
+            "gstin": "",
+            "pan": "",
+            "bankDetails": "",
+            "updatedAt": "",
+        },
+        "databaseOffline": True,
+        "message": DB_ERROR or "Database is not configured.",
     }
 
 
@@ -841,6 +890,20 @@ class KssHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
+    def route_shell_page(self):
+        parsed_path = urllib.parse.urlparse(self.path).path.rstrip("/")
+        if parsed_path == "/services" or parsed_path.startswith("/services/"):
+            return "services.html"
+        if parsed_path == "/products" or parsed_path.startswith("/products/"):
+            return "products.html"
+        return ""
+
+    def translate_path(self, path):
+        shell_page = self.route_shell_page()
+        if shell_page:
+            return str(ROOT / shell_page)
+        return super().translate_path(path)
+
     def json_response(self, status, data):
         payload = json.dumps(data).encode("utf-8")
         self.send_response(status)
@@ -856,8 +919,14 @@ class KssHandler(SimpleHTTPRequestHandler):
         return json.loads(self.rfile.read(length).decode("utf-8"))
 
     def do_GET(self):
-        if self.path == "/api/bootstrap":
-            self.json_response(200, bootstrap())
+        parsed_path = urllib.parse.urlparse(self.path).path
+        if parsed_path == "/api/bootstrap":
+            self.json_response(200, bootstrap() if DB_READY else offline_bootstrap())
+            return
+        shell_page = self.route_shell_page()
+        if shell_page:
+            self.path = f"/{shell_page}"
+            super().do_GET()
             return
         super().do_GET()
 
@@ -871,6 +940,12 @@ class KssHandler(SimpleHTTPRequestHandler):
 
     def handle_api_post(self):
         body = self.read_json()
+        if not DB_READY:
+            self.json_response(503, {
+                "message": "Database is not configured. Add DATABASE_URL or PG_* values in .env before using login, apply, or dashboard features.",
+                "detail": DB_ERROR,
+            })
+            return
 
         if self.path == "/api/register":
             error = validate_customer_payload(body)
@@ -1416,6 +1491,10 @@ class KssHandler(SimpleHTTPRequestHandler):
                 return
             service_id = str(service.get("id") or make_id("svc")).strip()
             service["id"] = service_id
+            service["slug"] = make_slug(service.get("slug") or title)
+            service["fullDescription"] = str(service.get("fullDescription") or service.get("tagline") or service.get("description") or "").strip()
+            service["whoFor"] = str(service.get("whoFor") or service.get("audience") or "").strip()
+            service["startingPrice"] = normalize_price(service.get("startingPrice") or service.get("pricing"))
             service["type"] = "service"
             badge = str(service.get("badge", "")).strip()
             description = str(service.get("description", "")).strip()
@@ -1480,6 +1559,11 @@ class KssHandler(SimpleHTTPRequestHandler):
                 return
             product_id = str(product.get("id") or make_id("prd")).strip()
             product["id"] = product_id
+            product["slug"] = make_slug(product.get("slug") or title)
+            product["fullDescription"] = str(product.get("fullDescription") or product.get("description") or "").strip()
+            product["categoryIcon"] = str(product.get("categoryIcon") or product.get("iconName") or product.get("icon") or "panel").strip()
+            product["startingPrice"] = normalize_price(product.get("startingPrice") or product.get("pricing"))
+            product["priceNote"] = str(product.get("priceNote") or "Price varies by capacity, brand, and project requirement.").strip()
             product["type"] = "product"
             badge = str(product.get("badge", "")).strip()
             description = str(product.get("description", "")).strip()
@@ -1659,8 +1743,17 @@ class KssHandler(SimpleHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    init_db()
+    try:
+        init_db()
+    except psycopg2.OperationalError as error:
+        DB_READY = False
+        DB_ERROR = str(error).strip()
+        print("Database is not configured, so KSS is starting in frontend-only mode.")
+        print("Login, apply, admin, employee, uploads, and dashboard APIs need PostgreSQL.")
+        print("Fix: create a .env file with DATABASE_URL, or PG_HOST/PG_DB/PG_USER/PG_PASSWORD.")
+        print(f"Database error: {DB_ERROR}")
     HOST = os.environ.get("HOST", "0.0.0.0")
     print(f"KSS server listening on http://{HOST}:{PORT}")
-    print("Admin login is phone/user 'admin'. Set ADMIN_PASSWORD before launch.")
+    if DB_READY:
+        print("Admin login is phone/user 'admin'. Set ADMIN_PASSWORD before launch.")
     ThreadingHTTPServer((HOST, PORT), KssHandler).serve_forever()

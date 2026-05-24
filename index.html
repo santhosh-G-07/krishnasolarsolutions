@@ -140,11 +140,11 @@
       </a>
       <nav class="site-nav" data-nav>
         <div class="nav-dropdown">
-          <button type="button">Products</button>
+          <a class="nav-dropdown-link" href="/products">Products</a>
           <div class="dropdown-menu" data-product-menu></div>
         </div>
         <div class="nav-dropdown">
-          <button type="button">Services</button>
+          <a class="nav-dropdown-link" href="/services">Services</a>
           <div class="dropdown-menu" data-service-menu></div>
         </div>
         <a href="apply.html">Apply</a>
@@ -179,7 +179,7 @@
             <small data-quote-subtext>A brighter home begins with a smarter choice.</small>
             <div class="hero-actions">
               <a class="button primary" href="apply.html">Apply for Solar</a>
-              <a class="button secondary glass-button" href="#services">View Services</a>
+              <a class="button secondary glass-button" href="/services">View Services</a>
               <a class="button ghost glass-button" href="assets/Krishna Solar Solutions Template.pdf" target="_blank" rel="noreferrer">Open Brochure</a>
             </div>
           </div>
@@ -188,22 +188,83 @@
         </div>
       </section>
 
-      <section class="section band" id="services">
-        <div class="section-heading wide-heading">
-          <p class="eyebrow">Services</p>
-          <h2>Power Your Home & Farm with Clean Solar Energy.</h2>
-          <p>Affordable Solar Solutions for Homes, Businesses & Farms.</p>
+      <section class="home-services-preview" id="services">
+        <div class="home-services-inner">
+          <div class="home-services-copy">
+            <p class="solar-expert-pill"><span aria-hidden="true">&#9728;</span> Solar experts</p>
+            <h2>
+              <span>Stop paying for electricity.</span>
+              <strong>Start owning it.</strong>
+            </h2>
+            <p>We install solar systems for homes, farms &amp; businesses across the region. Cut your bill by up to 90% &mdash; for good.</p>
+          </div>
+          <div class="service-steps">
+            <article class="service-step-card">
+              <span class="service-step-icon" aria-hidden="true">&#8982;</span>
+              <div>
+                <h3>We visit your site</h3>
+                <p>Free assessment of your roof &amp; usage</p>
+              </div>
+            </article>
+            <article class="service-step-card">
+              <span class="service-step-icon" aria-hidden="true">&#9889;</span>
+              <div>
+                <h3>We design your system</h3>
+                <p>Custom plan for your budget &amp; needs</p>
+              </div>
+            </article>
+            <article class="service-step-card">
+              <span class="service-step-icon" aria-hidden="true">&#10003;</span>
+              <div>
+                <h3>You start saving</h3>
+                <p>From day one after installation</p>
+              </div>
+            </article>
+            <a class="services-preview-button" href="/services">View all services &rarr;</a>
+            <p class="services-preview-note">On-grid &middot; Hybrid &middot; Off-grid &middot; Pump &middot; Commercial &middot; AMC</p>
+          </div>
         </div>
-        <div class="card-grid" data-service-list></div>
       </section>
 
-      <section class="section" id="products">
-        <div class="section-heading wide-heading">
-          <p class="eyebrow">Products</p>
-          <h2>Smart Solar Products for Every Energy Need</h2>
-          <p>Explore high-performance solar components designed for homes, businesses, and sustainable living.</p>
+      <section class="home-products-preview" id="products">
+        <div class="home-products-inner">
+          <div class="home-products-copy">
+            <p class="product-eyebrow">Our products</p>
+            <h2>
+              <span>No shortcuts.</span>
+              <strong>Only the best components.</strong>
+            </h2>
+            <p>We don't compromise on what goes on your roof. Every product is sourced from certified manufacturers.</p>
+          </div>
+          <div class="product-feature-panel">
+            <article class="product-feature-row">
+              <span class="product-feature-icon product-feature-shield" aria-hidden="true"></span>
+              <div>
+                <h3>Trusted brands only</h3>
+                <p>Adani, Havells, Waaree &amp; more</p>
+              </div>
+            </article>
+            <article class="product-feature-row">
+              <span class="product-feature-icon product-feature-tools" aria-hidden="true"></span>
+              <div>
+                <h3>Expert installation included</h3>
+                <p>Our team installs every product</p>
+              </div>
+            </article>
+            <article class="product-feature-row">
+              <span class="product-feature-icon product-feature-clock" aria-hidden="true"></span>
+              <div>
+                <h3>Full warranty support</h3>
+                <p>Manufacturer + our 1-year service</p>
+              </div>
+            </article>
+            <div class="product-stats-row">
+              <div><strong data-product-type-count>8+</strong><span>Product types</span></div>
+              <div><strong data-product-warranty>25yr</strong><span>Panel warranty</span></div>
+            </div>
+            <a class="products-preview-button" href="/products">See all products &rarr;</a>
+          </div>
         </div>
-        <div class="card-grid compact" data-product-list></div>
       </section>
 
       <section class="section why-solar-section">
@@ -400,7 +461,7 @@
             </div>
             <div class="about-actions">
               <a class="button primary" href="apply.html">Get a free quote</a>
-              <a class="button secondary" href="#services">Explore services</a>
+              <a class="button secondary" href="/services">Explore services</a>
             </div>
           </div>
           <div class="about-stat-grid" data-about-stats></div>

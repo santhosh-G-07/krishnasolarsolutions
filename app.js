@@ -287,13 +287,15 @@ const defaultProducts = [
 ];
 
 const statusFlow = ["Applied", "Contacted", "Site Visit Scheduled", "Site Visit Completed", "Quotation Sent", "Installation Started", "In Progress", "Completed"];
+const productCompatibilityOptions = ["On-grid", "Hybrid", "Off-grid", "Solar Pump", "Commercial"];
+const productIconOptions = ["panel", "inverter", "battery", "protection", "meter", "cable", "structure", "pump"];
 const phonePattern = /^[6-9]\d{9}$/;
 const pinPattern = /^\d{6}$/;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const appState = {
   currentUser: null,
-  bootstrap: { users: [], customers: [], employees: [], applications: [], notifications: [], services: [], products: [] },
+  bootstrap: { users: [], customers: [], employees: [], applications: [], notifications: [], services: [], products: [], businessSettings: {} },
   adminTab: "customer",
   dashboardFilter: { search: "", status: "all", assigned: "all" },
   adminEditor: {
@@ -349,11 +351,13 @@ const api = {
 
 async function init() {
   appState.currentUser = getSessionUser();
-  await hydrate();
   bindCommon();
+  await hydrate();
 
   const page = document.body.dataset.page;
   if (page === "home") initHome();
+  if (page === "services") initServicesPage();
+  if (page === "products") initProductsPage();
   if (page === "auth") initAuthPage();
   if (page === "apply") initApplyPage();
   if (page === "dashboard") initDashboardPage();
@@ -378,7 +382,8 @@ function syncBootstrap(data) {
     applications: data.applications || appState.bootstrap.applications || [],
     notifications: data.notifications || appState.bootstrap.notifications || [],
     services: data.services || appState.bootstrap.services || [],
-    products: data.products || appState.bootstrap.products || []
+    products: data.products || appState.bootstrap.products || [],
+    businessSettings: data.businessSettings || appState.bootstrap.businessSettings || {}
   };
   storage.set("kssBootstrap", appState.bootstrap);
 }
@@ -394,19 +399,39 @@ function bindCommon() {
 
 function bindNav() {
   const toggle = document.querySelector("[data-nav-toggle]");
-  const nav = document.querySelector("[data-nav]");
-  if (!toggle || !nav) return;
-  toggle.addEventListener("click", () => {
-    const isOpen = nav.classList.toggle("open");
-    toggle.setAttribute("aria-expanded", String(isOpen));
-  });
+  const nav = document.querySelector("[data-nav]") || document.querySelector(".site-nav");
+  if (!nav) return;
+  ensureHomeNavLink(nav);
+  if (toggle) {
+    toggle.addEventListener("click", () => {
+      const isOpen = nav.classList.toggle("open");
+      toggle.setAttribute("aria-expanded", String(isOpen));
+    });
+  }
   nav.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => {
     nav.classList.remove("open");
-    toggle.setAttribute("aria-expanded", "false");
+    if (toggle) toggle.setAttribute("aria-expanded", "false");
   }));
 }
 
+function ensureHomeNavLink(nav) {
+  const page = document.body.dataset.page || "";
+  if (page === "home" || nav.querySelector("[data-home-link]")) return;
+  nav.insertAdjacentHTML("afterbegin", `
+    <a class="home-nav-link" href="/index.html" aria-label="Go to home page" title="Home" data-home-link>
+      <span class="home-nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M3 10.8 12 3l9 7.8"/>
+          <path d="M5.5 9.8V21h13V9.8"/>
+          <path d="M9.5 21v-6h5v6"/>
+        </svg>
+      </span>
+    </a>
+  `);
+}
+
 function bindFloatingContact() {
+  ensureFloatingContact();
   const root = document.querySelector("[data-contact-float]");
   const toggle = document.querySelector("[data-contact-float-toggle]");
   if (!root || !toggle) return;
@@ -433,6 +458,28 @@ function bindFloatingContact() {
   });
 }
 
+function ensureFloatingContact() {
+  if (document.querySelector("[data-contact-float]")) return;
+  const settings = appState.bootstrap.businessSettings || {};
+  const phone = String(settings.businessMobile || KSS_PHONE).replace(/\D/g, "") || KSS_PHONE;
+  const phoneWithCountry = phone.length === 10 ? `91${phone}` : phone;
+  const email = settings.businessEmail || ADMIN_EMAIL;
+  document.body.insertAdjacentHTML("beforeend", `
+    <div class="contact-float" data-contact-float>
+      <button class="contact-float-main" type="button" aria-label="Open quick contact options" aria-expanded="false" data-contact-float-toggle>
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.91.33 1.8.63 2.65a2 2 0 0 1-.45 2.11L8.09 9.69a16 16 0 0 0 6.22 6.22l1.21-1.2a2 2 0 0 1 2.11-.45c.85.3 1.74.51 2.65.63A2 2 0 0 1 22 16.92z"/>
+        </svg>
+      </button>
+      <div class="contact-float-menu" aria-label="Quick contact options">
+        <a href="https://wa.me/${escapeAttr(phoneWithCountry)}" target="_blank" rel="noreferrer">WhatsApp</a>
+        <a href="tel:+${escapeAttr(phoneWithCountry)}">Call</a>
+        <a href="mailto:${escapeAttr(email)}">Mail</a>
+      </div>
+    </div>
+  `);
+}
+
 function bindPasswordToggles() {
   document.querySelectorAll(".password-field:not([data-password-bound])").forEach((field) => {
     field.dataset.passwordBound = "true";
@@ -449,10 +496,25 @@ function bindPasswordToggles() {
 function initHome() {
   renderMenusAndCards();
   renderLiveStats();
+  renderHomeProductStats();
   initHeroSlider();
   initCalculator();
   bindDetailDialog();
   bindContactCards();
+}
+
+function initServicesPage() {
+  renderMenusAndCards();
+  const slug = currentServiceSlug();
+  if (slug) renderServiceDetailPage(slug);
+  else renderServicesPage();
+}
+
+function initProductsPage() {
+  renderMenusAndCards();
+  const slug = currentProductSlug();
+  if (slug) renderProductDetailPage(slug);
+  else renderProductsPage();
 }
 
 function renderMenusAndCards() {
@@ -464,8 +526,8 @@ function renderMenusAndCards() {
   if (serviceList) serviceList.innerHTML = services.map(cardTemplate).join("");
   const products = activeProducts();
   if (productList) productList.innerHTML = products.map(cardTemplate).join("");
-  if (serviceMenu) serviceMenu.innerHTML = services.map((item) => menuTemplate(item, "services")).join("");
-  if (productMenu) productMenu.innerHTML = products.map((item) => menuTemplate(item, "products")).join("");
+  if (serviceMenu) serviceMenu.innerHTML = services.map(serviceMenuTemplate).join("");
+  if (productMenu) productMenu.innerHTML = products.map(productMenuTemplate).join("");
   document.querySelectorAll("[data-open-detail]").forEach((node) => node.addEventListener("click", openDetailFromClick));
 }
 
@@ -496,18 +558,25 @@ function activeProducts() {
 }
 
 function normalizeService(service, index = 0) {
+  const title = service.title || `service-${index + 1}`;
+  const slug = makeSlug(service.slug || service.id || title);
+  const startingPrice = normalizePrice(service.startingPrice ?? service.starting_price ?? service.price ?? service.pricing);
   return {
     ...service,
-    id: service.id || makeSlug(service.title || `service-${index + 1}`),
+    id: service.id || slug,
+    slug,
     type: "service",
     sortOrder: Number(service.sortOrder || index + 1),
     active: service.active !== false,
     tagline: service.tagline || service.description || "",
+    fullDescription: service.fullDescription || service.tagline || service.description || "",
+    whoFor: service.whoFor || service.audience || "",
     details: normalizeList(service.details),
     benefits: normalizeList(service.benefits),
     process: normalizeSteps(service.process),
     documents: normalizeList(service.documents),
-    pricing: service.pricing || "Custom quote",
+    startingPrice,
+    pricing: service.pricing || formatStartingPrice(startingPrice),
     priceNote: service.priceNote || "Final price is confirmed after site visit and requirement check.",
     ctaPrimary: service.ctaPrimary || "Book free site visit",
     ctaSecondary: service.ctaSecondary || "WhatsApp us"
@@ -526,18 +595,44 @@ function normalizeSteps(items) {
   }).filter((item) => item.name || item.detail);
 }
 
+function normalizePrice(value) {
+  const digits = String(value ?? "").replace(/[^0-9]/g, "");
+  return digits ? Number(digits) : 0;
+}
+
+function formatCurrency(value) {
+  const number = Number(value || 0);
+  if (!number) return "Custom quote";
+  return `Rs ${number.toLocaleString("en-IN")}`;
+}
+
+function formatStartingPrice(value) {
+  const label = formatCurrency(value);
+  return label === "Custom quote" ? label : `${label} onwards`;
+}
+
 function normalizeProduct(product, index = 0) {
+  const title = product.title || `product-${index + 1}`;
+  const slug = makeSlug(product.slug || product.id || title);
+  const startingPrice = normalizePrice(product.startingPrice ?? product.starting_price ?? product.price ?? product.pricing);
   return {
     ...product,
-    id: product.id || makeSlug(product.title || `product-${index + 1}`),
+    id: product.id || slug,
+    slug,
     type: "product",
     sortOrder: Number(product.sortOrder || index + 1),
     active: product.active !== false,
+    fullDescription: product.fullDescription || product.description || "",
+    categoryIcon: product.categoryIcon || product.iconName || product.icon || "panel",
     warranty: product.warranty || "Warranty available",
-    color: product.color || "#1a5c35",
+    color: product.color || "#9a5c12",
+    startingPrice,
+    pricing: product.pricing || formatStartingPrice(startingPrice),
+    priceNote: product.priceNote || "Price varies by capacity, brand, and project requirement.",
     icon: product.icon || "▦",
     specs: normalizeSpecs(product.specs),
     benefits: normalizeList(product.benefits),
+    compatibleWith: normalizeList(product.compatibleWith),
     install: normalizeList(product.install || product.details),
     process: normalizeList(product.process)
   };
@@ -554,6 +649,17 @@ function normalizeSpecs(specs) {
 
 function cardTemplate(item) {
   const product = item.type === "product" ? normalizeProduct(item) : null;
+  if (item.type === "service") {
+    const service = normalizeService(item);
+    return `
+      <a class="info-card" href="${escapeAttr(serviceUrl(service))}">
+        <span class="tag">${escapeHtml(service.badge)}</span>
+        <h3>${escapeHtml(service.title)}</h3>
+        <p>${escapeHtml(service.description)}</p>
+        <span class="details-link">View service details</span>
+      </a>
+    `;
+  }
   return `
     <article class="info-card" data-open-detail="${escapeHtml(item.title)}">
       ${product ? `<div class="product-card-icon" style="--product-color:${escapeAttr(product.color)}">${escapeHtml(product.icon)}</div>` : ""}
@@ -565,8 +671,319 @@ function cardTemplate(item) {
   `;
 }
 
+function serviceMenuTemplate(item) {
+  const service = normalizeService(item);
+  return `<a href="${escapeAttr(serviceUrl(service))}">${escapeHtml(service.title)}</a>`;
+}
+
+function productMenuTemplate(item) {
+  const product = normalizeProduct(item);
+  return `<a href="${escapeAttr(productUrl(product))}">${escapeHtml(product.title)}</a>`;
+}
+
 function menuTemplate(item, sectionId) {
   return `<a href="#${sectionId}" data-open-detail="${escapeHtml(item.title)}">${escapeHtml(item.title)}</a>`;
+}
+
+function renderServicesPage() {
+  const services = activeServices();
+  const root = document.querySelector("[data-services-page]");
+  if (!root) return;
+  root.innerHTML = `
+    <section class="services-list-hero">
+      <div class="services-page-wrap">
+        <p class="eyebrow">Our services</p>
+        <h1>Every solar solution you need, under one roof.</h1>
+        <p>From homes to farms to businesses &mdash; we design, install and maintain it all.</p>
+      </div>
+    </section>
+    <section class="services-list-section">
+      <div class="services-page-wrap">
+        <div class="services-list-grid">
+          ${services.map((service) => serviceListingCard(normalizeService(service))).join("") || `<p class="muted">No active services are available right now.</p>`}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function serviceListingCard(item) {
+  return `
+    <article class="service-list-card">
+      <span class="tag">${escapeHtml(item.badge || "Solar service")}</span>
+      <h2>${escapeHtml(item.title)}</h2>
+      <p>${escapeHtml(item.description)}</p>
+      <a href="${escapeAttr(serviceUrl(item))}">Open full details &rarr;</a>
+    </article>
+  `;
+}
+
+function servicePageBlock(title, body) {
+  return `<section class="service-page-block"><h3>${escapeHtml(title)}</h3>${body}</section>`;
+}
+
+function renderServiceDetailPage(slug) {
+  const root = document.querySelector("[data-services-page]");
+  const services = activeServices().map((service) => normalizeService(service));
+  const item = services.find((service) => service.slug === slug || service.id === slug);
+  if (!root) return;
+  if (!item) {
+    root.innerHTML = `
+      <section class="service-detail-page">
+        <div class="services-page-wrap">
+          <a class="service-back-link" href="/services">&larr; Back to all services</a>
+          <h1>Service not found</h1>
+          <p class="muted">This service may be inactive or unavailable.</p>
+        </div>
+      </section>
+    `;
+    return;
+  }
+  root.innerHTML = `
+    <article class="service-detail-page">
+      <div class="services-page-wrap service-detail-wrap">
+        <a class="service-back-link" href="/services">&larr; Back to all services</a>
+        <span class="tag">${escapeHtml(item.badge || "Solar service")}</span>
+        <h1>${escapeHtml(item.title)}</h1>
+        <p class="service-detail-intro">${escapeHtml(item.description || item.fullDescription)}</p>
+        <section class="service-detail-panel">
+          <h2>What's included</h2>
+          <div class="service-check-grid">
+            ${item.details.map((detail) => checkItem(detail)).join("") || `<p class="muted">Included items will be confirmed during consultation.</p>`}
+          </div>
+        </section>
+        <section class="service-detail-panel">
+          <h2>Key benefits</h2>
+          <div class="service-benefit-list">
+            ${item.benefits.map((benefit) => checkItem(benefit, "benefit-row")).join("") || `<p class="muted">Benefits will be confirmed after a site assessment.</p>`}
+          </div>
+        </section>
+        <section class="service-detail-panel">
+          <h2>How it works - your journey</h2>
+          <div class="service-timeline">
+            ${item.process.map((step, index) => `
+              <div class="service-timeline-step">
+                <span>${index + 1}</span>
+                <div><strong>${escapeHtml(step.name)}</strong><p>${escapeHtml(step.detail)}</p></div>
+              </div>
+            `).join("") || `<p class="muted">KSS will guide you from site visit to handover.</p>`}
+          </div>
+        </section>
+        <section class="service-detail-panel">
+          <h2>Documents you'll need</h2>
+          <div class="service-check-grid">
+            ${item.documents.map((documentName) => checkItem(documentName, "doc-row")).join("") || `<p class="muted">Documents will be confirmed based on service and subsidy eligibility.</p>`}
+          </div>
+        </section>
+        <section class="service-detail-panel">
+          <h2>Pricing</h2>
+          <div class="service-price-card">
+            <span>Starting from</span>
+            <strong>${escapeHtml(servicePriceLabel(item))}</strong>
+          </div>
+          <p>${escapeHtml(item.priceNote)}</p>
+        </section>
+        <div class="service-detail-actions">
+          <a class="button primary" href="${escapeAttr(whatsappUrl(`Hi KSS, I want to book a free site visit for ${item.title}`))}" target="_blank" rel="noreferrer">${escapeHtml(item.ctaPrimary || "Book free site visit")}</a>
+          <a class="button secondary" href="${escapeAttr(whatsappUrl(`Hi KSS, I want details for ${item.title}`))}" target="_blank" rel="noreferrer">${escapeHtml(item.ctaSecondary || "WhatsApp us")}</a>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function currentServiceSlug() {
+  const path = window.location.pathname.replace(/\/+$/, "");
+  const match = path.match(/^\/services\/([^/]+)$/);
+  return match ? decodeURIComponent(match[1]) : "";
+}
+
+function serviceUrl(service) {
+  return `/services/${makeSlug(service.slug || service.id || service.title)}`;
+}
+
+function servicePriceLabel(service) {
+  return service.startingPrice ? formatStartingPrice(service.startingPrice) : (service.pricing || "Custom quote");
+}
+
+function renderProductsPage() {
+  const products = activeProducts();
+  const root = document.querySelector("[data-products-page]");
+  if (!root) return;
+  root.innerHTML = `
+    <section class="products-list-hero">
+      <div class="products-page-wrap">
+        <p class="product-eyebrow">Products</p>
+        <h1>Smart solar products for every energy need.</h1>
+        <p>High-performance components for homes, businesses and farms.</p>
+      </div>
+    </section>
+    <section class="products-list-section">
+      <div class="products-page-wrap">
+        <div class="products-list-grid">
+          ${products.map((product) => productListingCard(normalizeProduct(product))).join("") || `<p class="muted">No active products are available right now.</p>`}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function productListingCard(item) {
+  return `
+    <article class="product-list-card">
+      <div class="product-list-icon">${escapeHtml(productIconLabel(item.categoryIcon))}</div>
+      <span class="product-tag">${escapeHtml(item.badge || "Product")}</span>
+      <h2>${escapeHtml(item.title)}</h2>
+      <p>${escapeHtml(item.description)}</p>
+      <a href="${escapeAttr(productUrl(item))}">Open full details &rarr;</a>
+    </article>
+  `;
+}
+
+function renderProductDetailPage(slug) {
+  const root = document.querySelector("[data-products-page]");
+  const products = activeProducts().map((product) => normalizeProduct(product));
+  const item = products.find((product) => product.slug === slug || product.id === slug);
+  if (!root) return;
+  if (!item) {
+    root.innerHTML = `
+      <section class="product-detail-page">
+        <div class="products-page-wrap">
+          <a class="product-back-link" href="/products">&larr; Back to all products</a>
+          <h1>Product not found</h1>
+          <p class="muted">This product may be inactive or unavailable.</p>
+        </div>
+      </section>
+    `;
+    return;
+  }
+  root.innerHTML = `
+    <article class="product-detail-page">
+      <div class="products-page-wrap product-detail-wrap">
+        <a class="product-back-link" href="/products">&larr; Back to all products</a>
+        <span class="product-tag">${escapeHtml(item.badge || "Product")}</span>
+        <h1>${escapeHtml(item.title)}</h1>
+        <p class="product-detail-intro">${escapeHtml(item.fullDescription || item.description)}</p>
+        <section class="product-detail-panel">
+          <h2>Specifications</h2>
+          <div class="product-spec-detail-grid">
+            ${item.specs.map((spec) => `
+              <div>
+                <span>${escapeHtml(spec.label)}</span>
+                <strong>${escapeHtml([spec.value, spec.unit].filter(Boolean).join(" "))}</strong>
+              </div>
+            `).join("") || `<p class="muted">Specifications will be updated by the KSS team.</p>`}
+          </div>
+        </section>
+        <section class="product-detail-panel">
+          <h2>Key features</h2>
+          <div class="product-feature-list">
+            ${item.benefits.map((feature) => amberCheckItem(feature)).join("") || `<p class="muted">Features will be confirmed during product selection.</p>`}
+          </div>
+        </section>
+        <section class="product-detail-panel">
+          <h2>Compatible with</h2>
+          <div class="product-compatible-tags">
+            ${(item.compatibleWith.length ? item.compatibleWith : item.install).map((tag) => `<span>${escapeHtml(tag)}</span>`).join("") || `<p class="muted">Compatibility depends on your system design.</p>`}
+          </div>
+        </section>
+        <section class="product-detail-panel">
+          <h2>Pricing</h2>
+          <div class="product-price-card">
+            <span>Starting from</span>
+            <strong>${escapeHtml(productPriceLabel(item))}</strong>
+          </div>
+          <p>${escapeHtml(item.priceNote)}</p>
+        </section>
+        <div class="product-detail-actions">
+          <a class="button product-primary" href="${escapeAttr(whatsappUrl(`Hi KSS, I want a quote for ${item.title}`))}" target="_blank" rel="noreferrer">Get a quote</a>
+          <a class="button product-secondary" href="${escapeAttr(whatsappUrl(`Hi KSS, I want details for ${item.title}`))}" target="_blank" rel="noreferrer">WhatsApp us</a>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
+function renderHomeProductStats() {
+  const products = activeProducts();
+  const count = document.querySelector("[data-product-type-count]");
+  const warranty = document.querySelector("[data-product-warranty]");
+  if (count) count.textContent = `${Math.max(products.length, 8)}+`;
+  if (warranty) {
+    const panel = products.find((product) => /panel/i.test(product.title) && product.warranty);
+    warranty.textContent = panel?.warranty?.replace(/\s+/g, "") || "25yr";
+  }
+}
+
+function amberCheckItem(text) {
+  return `<div class="product-check-row"><span aria-hidden="true">✓</span><p>${escapeHtml(text)}</p></div>`;
+}
+
+function currentProductSlug() {
+  const path = window.location.pathname.replace(/\/+$/, "");
+  const match = path.match(/^\/products\/([^/]+)$/);
+  return match ? decodeURIComponent(match[1]) : "";
+}
+
+function productUrl(product) {
+  return `/products/${makeSlug(product.slug || product.id || product.title)}`;
+}
+
+function productPriceLabel(product) {
+  return product.startingPrice ? formatStartingPrice(product.startingPrice) : (product.pricing || "Custom quote");
+}
+
+function productIconLabel(icon) {
+  const key = String(icon || "").toLowerCase();
+  if (key.includes("inverter")) return "⚡";
+  if (key.includes("battery") || key.includes("storage")) return "▣";
+  if (key.includes("pump")) return "◌";
+  if (key.includes("meter")) return "↔";
+  if (key.includes("protection")) return "⛨";
+  if (key.includes("structure")) return "△";
+  if (key.includes("cable")) return "⌁";
+  return "▦";
+}
+
+function whatsappNumber() {
+  const settings = appState.bootstrap.businessSettings || {};
+  const raw = settings.whatsappNumber || settings.businessMobile || KSS_PHONE;
+  const digits = String(raw).replace(/\D/g, "");
+  return digits.length === 10 ? `91${digits}` : digits || `91${KSS_PHONE}`;
+}
+
+function whatsappUrl(text) {
+  return `https://wa.me/${whatsappNumber()}?text=${encodeURIComponent(text)}`;
+}
+
+function serviceImage(id, index) {
+  const images = {
+    "on-grid-solar": "assets/solar-slide-rooftop.png",
+    "hybrid-solar": "assets/solar-slide-home.png",
+    "off-grid-solar": "assets/solar-slide-environment.png",
+    "solar-water-pump": "assets/solar-slide-agri.png",
+    "commercial-solar": "assets/solar-slide-install.png",
+    "amc-maintenance": "assets/renewable-energy.png"
+  };
+  const fallback = ["assets/solar-slide-home.png", "assets/solar-slide-rooftop.png", "assets/solar-slide-install.png"];
+  return images[id] || fallback[index % fallback.length];
+}
+
+function bindServicePageActions() {
+  document.querySelectorAll("[data-service-apply]").forEach((link) => {
+    link.addEventListener("click", () => storage.set("kssSelectedService", link.dataset.serviceApply));
+  });
+}
+
+function focusLinkedService() {
+  const id = decodeURIComponent(window.location.hash || "").replace("#", "");
+  if (!id) return;
+  const target = document.getElementById(id);
+  if (!target) return;
+  window.setTimeout(() => {
+    target.classList.add("focused");
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 120);
 }
 
 function openDetailFromClick(event) {
@@ -1315,8 +1732,9 @@ function serviceEditor(service) {
   const item = normalizeService(service);
   const tabs = [
     ["basic", "Basic"],
-    ["included", "Included"],
     ["benefits", "Benefits"],
+    ["audience", "Audience"],
+    ["included", "Included"],
     ["journey", "Journey"],
     ["documents", "Documents"],
     ["pricing", "Pricing"]
@@ -1336,17 +1754,24 @@ function serviceEditor(service) {
           <div class="service-editor-grid">
             <input name="id" type="hidden" value="${escapeAttr(item.id)}">
             <label>Order <input name="sortOrder" type="number" min="1" value="${escapeAttr(item.sortOrder)}"></label>
-            <label>Badge <input name="badge" value="${escapeAttr(item.badge)}"></label>
-            <label>Service title <input name="title" required value="${escapeAttr(item.title)}"></label>
-            <label>Card description <textarea name="description" required>${escapeHtml(item.description)}</textarea></label>
+            <label>Badge label <input name="badge" value="${escapeAttr(item.badge)}" placeholder="Best for low bills"></label>
+            <label>Service name <input name="title" required value="${escapeAttr(item.title)}"></label>
+            <label>Slug <input name="slug" required value="${escapeAttr(item.slug)}" placeholder="on-grid-solar"></label>
+            <label>Short description <textarea name="description" required>${escapeHtml(item.description)}</textarea></label>
+            <label>Full description <textarea name="fullDescription" required>${escapeHtml(item.fullDescription)}</textarea></label>
             <input name="tagline" type="hidden" value="${escapeAttr(item.tagline)}">
+          </div>
+        </div>
+        <div class="admin-editor-panel ${activeAdminPanel("services", "benefits")}" data-editor-panel-content="benefits">
+          ${listEditor("Key benefits", "benefits", item.benefits)}
+        </div>
+        <div class="admin-editor-panel ${activeAdminPanel("services", "audience")}" data-editor-panel-content="audience">
+          <div class="service-editor-grid">
+            <label>Who is this for? <textarea name="whoFor" required>${escapeHtml(item.whoFor)}</textarea></label>
           </div>
         </div>
         <div class="admin-editor-panel ${activeAdminPanel("services", "included")}" data-editor-panel-content="included">
           ${listEditor("What's included", "details", item.details)}
-        </div>
-        <div class="admin-editor-panel ${activeAdminPanel("services", "benefits")}" data-editor-panel-content="benefits">
-          ${listEditor("Key benefits", "benefits", item.benefits)}
         </div>
         <div class="admin-editor-panel ${activeAdminPanel("services", "journey")}" data-editor-panel-content="journey">
           ${stepEditor("Journey steps", "process", item.process)}
@@ -1356,7 +1781,7 @@ function serviceEditor(service) {
         </div>
         <div class="admin-editor-panel ${activeAdminPanel("services", "pricing")}" data-editor-panel-content="pricing">
           <div class="service-editor-grid">
-            <label>Pricing <input name="pricing" value="${escapeAttr(item.pricing)}"></label>
+            <label>Starting price <input name="startingPrice" type="number" min="0" step="1" value="${escapeAttr(item.startingPrice || "")}" placeholder="65000"></label>
             <label>Pricing note <textarea name="priceNote">${escapeHtml(item.priceNote)}</textarea></label>
           </div>
         </div>
@@ -1529,11 +1954,11 @@ function stepEditor(label, name, steps) {
 }
 
 function repeatRow(name, value) {
-  return `<div class="repeat-row"><input name="${escapeAttr(name)}[]" value="${escapeAttr(value)}" placeholder="Add detail"><button type="button" data-remove-repeat>Remove</button></div>`;
+  return `<div class="repeat-row"><input name="${escapeAttr(name)}[]" value="${escapeAttr(value)}" placeholder="Add detail"><button type="button" data-move-repeat="up">Up</button><button type="button" data-move-repeat="down">Down</button><button type="button" data-remove-repeat>Remove</button></div>`;
 }
 
 function stepRow(name, step) {
-  return `<div class="repeat-row step-repeat"><input name="${escapeAttr(name)}Name[]" value="${escapeAttr(step.name || "")}" placeholder="Step title"><input name="${escapeAttr(name)}Detail[]" value="${escapeAttr(step.detail || "")}" placeholder="Step detail"><button type="button" data-remove-repeat>Remove</button></div>`;
+  return `<div class="repeat-row step-repeat"><input name="${escapeAttr(name)}Name[]" value="${escapeAttr(step.name || "")}" placeholder="Step title"><input name="${escapeAttr(name)}Detail[]" value="${escapeAttr(step.detail || "")}" placeholder="Step detail"><button type="button" data-move-repeat="up">Up</button><button type="button" data-move-repeat="down">Down</button><button type="button" data-remove-repeat>Remove</button></div>`;
 }
 
 function bindServiceForms() {
@@ -1544,13 +1969,17 @@ function bindServiceForms() {
       sortOrder: services.length + 1,
       active: true,
       title: "New Solar Service",
+      slug: "new-solar-service",
       badge: "New",
       description: "Short service card description.",
-      tagline: "Clear customer-facing tagline for this service.",
+      fullDescription: "Full service detail for this solar solution.",
+      whoFor: "Ideal for customers who need a tailored solar solution.",
+      tagline: "Full service detail for this solar solution.",
       details: ["Included item"],
       benefits: ["Main customer benefit"],
       process: [{ name: "Free consultation", detail: "KSS understands the customer requirement." }],
       documents: ["Aadhaar card or ID proof"],
+      startingPrice: 0,
       pricing: "Custom quote",
       priceNote: "Final price is confirmed after site visit.",
       ctaPrimary: "Book free site visit",
@@ -1560,23 +1989,42 @@ function bindServiceForms() {
   });
 
   document.querySelectorAll("[data-service-form]").forEach((form) => {
+    const titleInput = form.querySelector('input[name="title"]');
+    const slugInput = form.querySelector('input[name="slug"]');
+    const originalSlug = slugInput?.value || "";
+    if (titleInput && slugInput) {
+      slugInput.addEventListener("input", () => {
+        slugInput.dataset.manual = "true";
+      });
+      titleInput.addEventListener("input", () => {
+        if (slugInput.dataset.manual === "true" && slugInput.value !== originalSlug) return;
+        slugInput.value = makeSlug(titleInput.value);
+      });
+    }
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const formData = Object.fromEntries(new FormData(form).entries());
+      const title = formData.title.trim();
+      const slug = makeSlug(formData.slug || title);
+      const startingPrice = normalizePrice(formData.startingPrice);
       const service = {
         id: formData.id,
+        slug,
         type: "service",
         sortOrder: Number(formData.sortOrder || 0),
         active: Boolean(form.elements.active.checked),
-        title: formData.title.trim(),
+        title,
         badge: formData.badge.trim(),
         description: formData.description.trim(),
-        tagline: formData.tagline.trim(),
+        fullDescription: formData.fullDescription.trim(),
+        whoFor: formData.whoFor.trim(),
+        tagline: formData.fullDescription.trim(),
         details: collectRepeat(form, "details"),
         benefits: collectRepeat(form, "benefits"),
         process: collectSteps(form, "process"),
         documents: collectRepeat(form, "documents"),
-        pricing: formData.pricing.trim(),
+        startingPrice,
+        pricing: formatStartingPrice(startingPrice),
         priceNote: formData.priceNote.trim(),
         ctaPrimary: "Book free site visit",
         ctaSecondary: "WhatsApp us"
@@ -1613,9 +2061,9 @@ function productEditor(product) {
   const tabs = [
     ["basic", "Basic"],
     ["specs", "Specs"],
-    ["benefits", "Benefits"],
-    ["install", "Install"],
-    ["workflow", "Workflow"]
+    ["features", "Features"],
+    ["compat", "Compatible"],
+    ["pricing", "Pricing"]
   ];
   return `
     <form class="service-editor product-editor admin-editor-form" data-product-form="${escapeAttr(item.id)}" data-admin-editor-form="products">
@@ -1632,23 +2080,28 @@ function productEditor(product) {
           <div class="service-editor-grid">
             <input name="id" type="hidden" value="${escapeAttr(item.id)}">
             <label>Order <input name="sortOrder" type="number" min="1" value="${escapeAttr(item.sortOrder)}"></label>
-            <label>Badge <input name="badge" value="${escapeAttr(item.badge)}"></label>
-            <label>Product title <input name="title" required value="${escapeAttr(item.title)}"></label>
-            <label>Warranty <input name="warranty" value="${escapeAttr(item.warranty)}"></label>
-            <label>Description <textarea name="description" required>${escapeHtml(item.description)}</textarea></label>
+            <label>Category badge <input name="badge" value="${escapeAttr(item.badge)}" placeholder="Panel"></label>
+            <label>Category icon <select name="categoryIcon">${productIconOptions.map((icon) => `<option value="${escapeAttr(icon)}" ${item.categoryIcon === icon ? "selected" : ""}>${escapeHtml(labelFromKey(icon))}</option>`).join("")}</select></label>
+            <label>Product name <input name="title" required value="${escapeAttr(item.title)}"></label>
+            <label>Slug <input name="slug" required value="${escapeAttr(item.slug)}" placeholder="solar-panels"></label>
+            <label>Short description <textarea name="description" required>${escapeHtml(item.description)}</textarea></label>
+            <label>Full description <textarea name="fullDescription">${escapeHtml(item.fullDescription)}</textarea></label>
           </div>
         </div>
         <div class="admin-editor-panel ${activeAdminPanel("products", "specs")}" data-editor-panel-content="specs">
           ${specEditor(item.specs)}
         </div>
-        <div class="admin-editor-panel ${activeAdminPanel("products", "benefits")}" data-editor-panel-content="benefits">
-          ${listEditor("Benefits", "benefits", item.benefits)}
+        <div class="admin-editor-panel ${activeAdminPanel("products", "features")}" data-editor-panel-content="features">
+          ${listEditor("Key features", "benefits", item.benefits)}
         </div>
-        <div class="admin-editor-panel ${activeAdminPanel("products", "install")}" data-editor-panel-content="install">
-          ${listEditor("Installation details", "install", item.install)}
+        <div class="admin-editor-panel ${activeAdminPanel("products", "compat")}" data-editor-panel-content="compat">
+          ${compatibleEditor(item.compatibleWith)}
         </div>
-        <div class="admin-editor-panel ${activeAdminPanel("products", "workflow")}" data-editor-panel-content="workflow">
-          ${listEditor("Workflow steps", "process", item.process)}
+        <div class="admin-editor-panel ${activeAdminPanel("products", "pricing")}" data-editor-panel-content="pricing">
+          <div class="service-editor-grid">
+            <label>Starting price <input name="startingPrice" type="number" min="0" step="1" value="${escapeAttr(item.startingPrice || "")}" placeholder="15000"></label>
+            <label>Price note <textarea name="priceNote">${escapeHtml(item.priceNote)}</textarea></label>
+          </div>
         </div>
       </div>
       <div class="form-actions admin-editor-actions">
@@ -1661,17 +2114,38 @@ function productEditor(product) {
 
 function specEditor(specs) {
   const rows = [...specs];
-  while (rows.length < 3) rows.push({ label: "", value: "", unit: "" });
+  if (!rows.length) rows.push({ label: "", value: "", unit: "" });
   return `
-    <div class="repeat-editor spec-editor">
-      <div class="repeat-head"><strong>3 key specs</strong></div>
-      <div class="repeat-list">${rows.slice(0, 3).map((spec) => `
+    <div class="repeat-editor spec-editor" data-spec-editor>
+      <div class="repeat-head"><strong>Specifications</strong><button type="button" data-add-spec>Add spec</button></div>
+      <div class="repeat-list">${rows.map((spec) => specRow(spec)).join("")}</div>
+    </div>
+  `;
+}
+
+function specRow(spec = { label: "", value: "", unit: "" }) {
+  return `
         <div class="repeat-row spec-repeat">
           <input name="specLabel[]" value="${escapeAttr(spec.label)}" placeholder="Label">
           <input name="specValue[]" value="${escapeAttr(spec.value)}" placeholder="Value">
           <input name="specUnit[]" value="${escapeAttr(spec.unit)}" placeholder="Unit">
+          <button type="button" data-move-repeat="up">Up</button>
+          <button type="button" data-move-repeat="down">Down</button>
+          <button type="button" data-remove-repeat>Remove</button>
         </div>
-      `).join("")}</div>
+  `;
+}
+
+function compatibleEditor(selected) {
+  const values = new Set(selected || []);
+  return `
+    <div class="compatible-editor">
+      ${productCompatibilityOptions.map((option) => `
+        <label>
+          <input name="compatibleWith[]" type="checkbox" value="${escapeAttr(option)}" ${values.has(option) ? "checked" : ""}>
+          <span>${escapeHtml(option)}</span>
+        </label>
+      `).join("")}
     </div>
   `;
 }
@@ -1682,47 +2156,73 @@ function bindProductForms() {
     const productId = makeSlug(`new-product-${Date.now()}`);
     saveProduct(normalizeProduct({
       id: productId,
+      slug: productId,
       sortOrder: products.length + 1,
       active: true,
       title: "New Solar Product",
       badge: "Product",
-      warranty: "Warranty available",
-      color: "#1a5c35",
+      categoryIcon: "panel",
+      color: "#9a5c12",
       icon: "▦",
       description: "Short product card description.",
-      specs: [{ label: "Capacity", value: "Custom", unit: "" }, { label: "Type", value: "Solar", unit: "" }, { label: "Use", value: "Project", unit: "" }],
-      benefits: ["Main customer benefit"],
-      install: ["Installation detail"],
-      process: ["Requirement check", "Selection", "Installation"]
+      fullDescription: "Detailed product description.",
+      specs: [{ label: "Brand", value: "Certified", unit: "" }, { label: "Warranty", value: "Available", unit: "" }],
+      benefits: ["Main product feature"],
+      compatibleWith: ["On-grid"],
+      startingPrice: 0,
+      pricing: "Custom quote",
+      priceNote: "Price varies by capacity and brand."
     }), "New product added.", productId);
   });
 
   document.querySelectorAll("[data-product-form]").forEach((form) => {
+    const titleInput = form.querySelector('input[name="title"]');
+    const slugInput = form.querySelector('input[name="slug"]');
+    const originalSlug = slugInput?.value || "";
+    if (titleInput && slugInput) {
+      slugInput.addEventListener("input", () => {
+        slugInput.dataset.manual = "true";
+      });
+      titleInput.addEventListener("input", () => {
+        if (slugInput.dataset.manual === "true" && slugInput.value !== originalSlug) return;
+        slugInput.value = makeSlug(titleInput.value);
+      });
+    }
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const formData = Object.fromEntries(new FormData(form).entries());
       const previous = editableProducts().find((product) => product.id === formData.id) || {};
+      const specs = collectSpecs(form);
+      const title = formData.title.trim();
+      const slug = makeSlug(formData.slug || title);
+      const startingPrice = normalizePrice(formData.startingPrice);
       const product = {
         id: formData.id,
+        slug,
         type: "product",
         sortOrder: Number(formData.sortOrder || 0),
         active: Boolean(form.elements.active.checked),
-        title: formData.title.trim(),
+        title,
         badge: formData.badge.trim(),
-        warranty: formData.warranty.trim(),
-        color: previous.color || "#1a5c35",
-        icon: previous.icon || "P",
+        categoryIcon: formData.categoryIcon,
+        warranty: specValue(specs, "Warranty") || previous.warranty || "Warranty available",
+        color: previous.color || "#9a5c12",
+        icon: formData.categoryIcon,
         description: formData.description.trim(),
-        specs: collectSpecs(form),
+        fullDescription: formData.fullDescription.trim(),
+        specs,
         benefits: collectRepeat(form, "benefits"),
-        install: collectRepeat(form, "install"),
-        process: collectRepeat(form, "process")
+        compatibleWith: collectChecked(form, "compatibleWith"),
+        startingPrice,
+        pricing: formatStartingPrice(startingPrice),
+        priceNote: formData.priceNote.trim()
       };
       await saveProduct(product, "Product saved.");
     });
   });
 
   bindRepeatEditors();
+  bindSpecEditors();
   document.querySelectorAll("[data-delete-product]").forEach((button) => {
     button.addEventListener("click", async () => {
       const saved = await api.post("/api/products/delete", { id: button.dataset.deleteProduct, title: button.dataset.deleteTitle });
@@ -1776,6 +2276,33 @@ function bindRepeatEditors() {
     button.dataset.removeBound = "true";
     button.addEventListener("click", () => button.closest(".repeat-row")?.remove());
   });
+  document.querySelectorAll("[data-move-repeat]:not([data-move-bound])").forEach((button) => {
+    button.dataset.moveBound = "true";
+    button.addEventListener("click", () => {
+      const row = button.closest(".repeat-row");
+      if (!row) return;
+      if (button.dataset.moveRepeat === "up" && row.previousElementSibling) {
+        row.parentNode.insertBefore(row, row.previousElementSibling);
+      }
+      if (button.dataset.moveRepeat === "down" && row.nextElementSibling) {
+        row.parentNode.insertBefore(row.nextElementSibling, row);
+      }
+    });
+  });
+}
+
+function bindSpecEditors() {
+  document.querySelectorAll("[data-add-spec]:not([data-spec-bound])").forEach((button) => {
+    button.dataset.specBound = "true";
+    button.addEventListener("click", () => {
+      const editor = button.closest("[data-spec-editor]");
+      const list = editor?.querySelector(".repeat-list");
+      if (!list) return;
+      list.insertAdjacentHTML("beforeend", specRow());
+      bindRepeatEditors();
+      bindSpecEditors();
+    });
+  });
 }
 
 function collectRepeat(form, name) {
@@ -1793,6 +2320,16 @@ function collectSpecs(form) {
   const values = Array.from(form.querySelectorAll('[name="specValue[]"]'));
   const units = Array.from(form.querySelectorAll('[name="specUnit[]"]'));
   return labels.map((input, index) => ({ label: input.value.trim(), value: values[index]?.value.trim() || "", unit: units[index]?.value.trim() || "" })).filter((spec) => spec.label || spec.value || spec.unit);
+}
+
+function collectChecked(form, name) {
+  return Array.from(form.querySelectorAll(`[name="${name}[]"]:checked`)).map((input) => input.value.trim()).filter(Boolean);
+}
+
+function specValue(specs, label) {
+  const wanted = String(label || "").toLowerCase();
+  const found = specs.find((spec) => String(spec.label || "").toLowerCase() === wanted);
+  return found ? [found.value, found.unit].filter(Boolean).join(" ") : "";
 }
 
 function makeSlug(value) {
