@@ -1,0 +1,541 @@
+/* ============================================================
+   KSS — Responsive & Contact Redesign Layer
+   Loaded AFTER styles.css to override where needed.
+   Goal: fluid scaling for phone (≤480) → tablet (≤1024) → desktop (≥1025).
+   Uses clamp() so everything breathes naturally with viewport.
+   ============================================================ */
+
+/* ---------- Global fluid tokens ---------- */
+:root {
+  --kss-radius-card: clamp(14px, 1.4vw, 22px);
+  --kss-radius-pill: 999px;
+  --kss-pad-section-y: clamp(48px, 7vw, 96px);
+  --kss-pad-section-x: clamp(16px, 5vw, 72px);
+  --kss-gap-grid: clamp(14px, 2vw, 22px);
+  --kss-text-body: clamp(0.95rem, 0.85rem + 0.3vw, 1.06rem);
+  --kss-text-small: clamp(0.78rem, 0.72rem + 0.2vw, 0.86rem);
+  --kss-text-eyebrow: clamp(0.7rem, 0.65rem + 0.15vw, 0.78rem);
+  --kss-text-h2: clamp(1.6rem, 1.1rem + 2.4vw, 2.85rem);
+  --kss-text-h3: clamp(1.05rem, 0.95rem + 0.5vw, 1.25rem);
+  --kss-shadow-card: 0 1px 2px rgba(13, 74, 42, 0.04), 0 8px 24px -8px rgba(13, 74, 42, 0.12);
+  --kss-shadow-card-hover: 0 2px 4px rgba(13, 74, 42, 0.06), 0 18px 40px -12px rgba(13, 74, 42, 0.22);
+}
+
+/* ---------- Section base — fluid padding everywhere ---------- */
+.section {
+  padding: var(--kss-pad-section-y) var(--kss-pad-section-x);
+}
+
+/* Headings shrink elegantly on mobile */
+.section-heading h2,
+.split-section h2,
+.about-layout h2 {
+  font-size: var(--kss-text-h2);
+  line-height: 1.14;
+}
+
+.section-heading p,
+.about-layout p {
+  font-size: var(--kss-text-body);
+  line-height: 1.65;
+}
+
+.eyebrow {
+  font-size: var(--kss-text-eyebrow);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   CONTACT SECTION — full redesign
+   ============================================================ */
+
+.kss-contact-section {
+  background: linear-gradient(180deg, #fbfbf3 0%, #f5faf2 100%);
+}
+
+.kss-contact-section .section-heading {
+  margin-bottom: clamp(20px, 3vw, 36px);
+}
+
+.kss-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--kss-gap-grid);
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+@media (max-width: 1024px) {
+  .kss-contact-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* Last card spans full width on tablet for balance */
+  .kss-contact-grid .kss-contact-card--office {
+    grid-column: 1 / -1;
+    max-width: 540px;
+    justify-self: center;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .kss-contact-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .kss-contact-grid .kss-contact-card--office {
+    grid-column: auto;
+    max-width: none;
+  }
+}
+
+/* ----- Card itself ----- */
+.kss-contact-card {
+  /* Override the legacy .contact-card display:grid */
+  background: #ffffff;
+  border: 1px solid #dfeae0;
+  border-radius: var(--kss-radius-card);
+  padding: clamp(18px, 2.4vw, 28px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(8px, 1vw, 12px);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--kss-shadow-card);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  min-width: 0;
+}
+
+.kss-contact-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #0d4a2a 0%, #22a85a 100%);
+  opacity: 0.85;
+}
+
+.kss-contact-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--kss-shadow-card-hover);
+  border-color: #c8dfd1;
+}
+
+/* Top icon chip */
+.kss-contact-icon {
+  width: clamp(40px, 4.4vw, 52px);
+  height: clamp(40px, 4.4vw, 52px);
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ecf7ef 0%, #d4ecdc 100%);
+  color: #0d4a2a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+  flex: 0 0 auto;
+}
+
+.kss-contact-icon svg {
+  width: 58%;
+  height: 58%;
+  display: block;
+}
+
+.kss-contact-card--mail .kss-contact-icon {
+  background: linear-gradient(135deg, #eef4ff 0%, #d6e3ff 100%);
+  color: #1d4794;
+}
+
+.kss-contact-card--office .kss-contact-icon {
+  background: linear-gradient(135deg, #fff3df 0%, #ffe1b0 100%);
+  color: #8a5400;
+}
+
+/* Label / value / hint */
+.kss-contact-label {
+  font-size: var(--kss-text-eyebrow);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green, #12764a);
+}
+
+.kss-contact-value {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: clamp(1.05rem, 0.9rem + 0.55vw, 1.32rem);
+  font-weight: 600;
+  color: #0f1f14;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  word-break: break-word;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+  /* override legacy .contact-trigger font-weight 800 */
+  font-weight: 600;
+}
+
+.kss-contact-value--mail {
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: clamp(0.95rem, 0.82rem + 0.45vw, 1.12rem);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.kss-contact-hint {
+  font-size: var(--kss-text-small);
+  color: #7a9b85;
+  line-height: 1.5;
+}
+
+/* Action button row — always visible (no hover-reveal which is unusable on mobile) */
+.kss-contact-card .kss-contact-actions {
+  /* Override legacy collapse behavior */
+  max-height: none;
+  opacity: 1;
+  transform: none;
+  overflow: visible;
+  transition: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: clamp(6px, 1vw, 12px);
+  width: 100%;
+}
+
+/* Pill action buttons */
+.kss-contact-card .mini-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 8px 14px;
+  border-radius: var(--kss-radius-pill);
+  font-size: clamp(0.8rem, 0.74rem + 0.18vw, 0.9rem);
+  font-weight: 600;
+  letter-spacing: 0;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+  white-space: nowrap;
+  text-decoration: none;
+  font-family: "DM Sans", system-ui, sans-serif;
+}
+
+.kss-contact-card .mini-button:hover { transform: translateY(-1px); }
+.kss-contact-card .mini-button:active { transform: translateY(0); }
+
+.kss-contact-card .kss-mini-primary {
+  background: #0d4a2a;
+  color: #ffffff;
+  border-color: #0d4a2a;
+}
+.kss-contact-card .kss-mini-primary:hover {
+  background: #145e36;
+  border-color: #145e36;
+}
+
+.kss-contact-card .kss-mini-wa {
+  background: #25d366;
+  color: #ffffff;
+  border-color: #25d366;
+}
+.kss-contact-card .kss-mini-wa:hover {
+  background: #1fb858;
+  border-color: #1fb858;
+}
+
+.kss-contact-card .kss-mini-ghost {
+  background: #ffffff;
+  color: #0d4a2a;
+  border-color: #c8dfd1;
+}
+.kss-contact-card .kss-mini-ghost:hover {
+  background: #f0faf4;
+  border-color: #0d4a2a;
+}
+
+.kss-contact-card .mini-button svg {
+  flex: 0 0 auto;
+}
+
+/* Disable old hover-reveal opacity tricks for this card */
+.kss-contact-card:hover .kss-contact-actions,
+.kss-contact-card:focus-within .kss-contact-actions,
+.kss-contact-card.open .kss-contact-actions {
+  max-height: none;
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================
+   Override the broad mobile flatten of contact cards
+   (legacy CSS hid the white box + border at ≤820px / ≤480px)
+   We KEEP the card design on mobile, just tighter.
+   ============================================================ */
+@media (max-width: 820px) {
+  .kss-contact-section .contact-card,
+  .kss-contact-section .kss-contact-card {
+    background: #ffffff;
+    border: 1px solid #dfeae0;
+    border-radius: var(--kss-radius-card);
+    padding: clamp(16px, 4vw, 22px);
+    border-bottom: 1px solid #dfeae0;
+  }
+  .kss-contact-section .contact-grid,
+  .kss-contact-section .kss-contact-grid {
+    gap: 12px;
+  }
+  /* Legacy #contact selector reset */
+  #contact .contact-card {
+    background: #ffffff;
+    border: 1px solid #dfeae0;
+    border-radius: var(--kss-radius-card);
+    padding: clamp(16px, 4vw, 22px);
+  }
+  #contact .contact-grid {
+    gap: 12px;
+  }
+  #contact .section-heading {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .kss-contact-section .contact-actions,
+  .kss-contact-section .contact-card.open .contact-actions {
+    max-height: none;
+    display: flex;
+  }
+  .kss-contact-card .kss-contact-actions {
+    grid-template-columns: none;
+  }
+  .kss-contact-card .mini-button {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: 42px;
+  }
+  /* The 3rd "Visit Office" card has only one button — don't stretch it */
+  .kss-contact-card--office .mini-button {
+    flex: 0 0 auto;
+  }
+}
+
+/* ============================================================
+   GLOBAL responsive polish — applies site-wide
+   (header, hero panel, grids, footer fl. button)
+   ============================================================ */
+
+/* Body comfort */
+@media (max-width: 480px) {
+  body { font-size: 15px; }
+}
+
+/* Header: tighter brand on phone */
+@media (max-width: 480px) {
+  .brand img { height: 40px; width: 40px; border-radius: 6px; }
+  .brand strong { font-size: 1.1rem; }
+}
+
+/* Hero quote panel — already uses clamp, just tighten paddings */
+@media (max-width: 480px) {
+  .hero { min-height: auto; }
+  .quote-panel {
+    padding: 18px 18px 22px !important;
+  }
+  .hero-actions {
+    gap: 8px;
+  }
+}
+
+/* Why-Solar / About / Reviews — fluid heading + card padding */
+.why-content h2,
+.about-copy h2 {
+  font-size: clamp(1.7rem, 1.1rem + 2.6vw, 3.2rem);
+  line-height: 1.08;
+}
+
+.why-card-grid {
+  gap: var(--kss-gap-grid);
+}
+
+@media (max-width: 640px) {
+  .why-card-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .why-card-grid article {
+    padding: 14px !important;
+  }
+  .why-card-grid h3 {
+    font-size: 1rem;
+  }
+  .why-card-grid p {
+    font-size: 0.86rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .why-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Calculator (inline-styled in index.html) — fluid tweaks */
+@media (max-width: 480px) {
+  .kss-calc-wrap {
+    padding: 0 14px 1rem !important;
+    gap: 14px !important;
+  }
+  .kss-input-card,
+  .kss-payback-card,
+  .kss-hero-result {
+    padding: 1.25rem !important;
+    border-radius: 16px !important;
+  }
+  .kss-result-kw {
+    font-size: 36px !important;
+  }
+  .kss-metric-val {
+    font-size: 20px !important;
+  }
+  .kss-metric-card {
+    padding: 1rem !important;
+    border-radius: 14px !important;
+  }
+}
+
+/* Process / Choose strips — keep them readable */
+.process-grid,
+.choose-strip {
+  gap: var(--kss-gap-grid);
+}
+
+@media (max-width: 640px) {
+  .choose-strip {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .choose-strip article {
+    padding: 14px !important;
+  }
+}
+
+/* Reviews summary */
+@media (max-width: 640px) {
+  .rating-score strong {
+    font-size: 2.2rem !important;
+  }
+  .review-feature-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+/* Floating contact button — smaller on phone */
+@media (max-width: 480px) {
+  .contact-float {
+    right: 14px;
+    bottom: 78px;
+  }
+  .contact-float-main {
+    width: 52px;
+    height: 52px;
+  }
+  .contact-float-main svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* Stop horizontal scroll everywhere */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Better focus states for keyboard users */
+.kss-contact-card .mini-button:focus-visible,
+.kss-contact-value:focus-visible {
+  outline: 2px solid #1a7a45;
+  outline-offset: 3px;
+  border-radius: var(--kss-radius-pill);
+}
+
+/* ============================================================
+   HOME NAV ICON — placed in header-actions (not inside dropdown)
+   ============================================================ */
+
+.header-actions .home-nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--line, #d8e3dd);
+  background: var(--white, #fff);
+  color: var(--ink, #16232a);
+  text-decoration: none;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
+  flex: 0 0 auto;
+}
+
+.header-actions .home-nav-link:hover {
+  background: var(--band, #edf7f0);
+  border-color: var(--green, #12764a);
+  color: var(--green, #12764a);
+}
+
+.header-actions .home-nav-link:active {
+  transform: scale(0.96);
+}
+
+.header-actions .home-nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+
+.header-actions .home-nav-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Smaller on tight phones */
+@media (max-width: 480px) {
+  .header-actions .home-nav-link {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+  .header-actions .home-nav-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Safety: if the legacy code ever inserts a home link inside the nav dropdown,
+   hide it so it doesn't show as a giant row again. */
+.site-nav .home-nav-link,
+[data-nav] .home-nav-link {
+  display: none !important;
+}

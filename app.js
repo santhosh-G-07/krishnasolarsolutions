@@ -17,7 +17,7 @@ const defaultServices = [
     title: "On-grid Solar",
     badge: "Best for low bills",
     tagline: "Connect your home or business to the grid and cut electricity bills by up to 90%. Earn credits by selling surplus power back.",
-    description: "Connect your home or business to the grid and cut electricity bills by up to 90%. Earn credits by selling surplus power back.",
+    description: "Plug your rooftop into the grid and watch your electricity bill shrink by up to 90% from month one. Every extra unit you generate flows back to the grid as credit on your next bill — qualifying for PM Surya Ghar subsidy up to ₹78,000.",
     details: ["Solar panel installation", "Grid-tie inverter setup", "AC/DC wiring and cabling", "Net meter application", "Earthing and safety checks", "1-year free service"],
     benefits: ["Cut electricity bills by up to 90% from the first month", "Sell surplus power back to the grid and earn bill credits", "Eligible for PM Surya Ghar subsidy up to Rs 78,000 for 3kW systems", "System can pay for itself in 3-4 years, then deliver long-term free power"],
     process: [
@@ -41,7 +41,7 @@ const defaultServices = [
     title: "Hybrid Solar",
     badge: "Solar with backup",
     tagline: "Get grid power plus battery backup in one smart solar system. Stay powered during outages and reduce bills.",
-    description: "Get grid power plus battery backup in one smart solar system. Stay powered during outages and reduce bills.",
+    description: "The best of both worlds — daytime savings from solar plus instant battery backup the moment the grid goes down. Lights, fans, fridge, and Wi-Fi keep running through every power cut, while you still save up to 80% on bills.",
     details: ["Solar panel installation", "Hybrid inverter setup", "Battery bank installation", "Net metering support", "Earthing and safety checks", "1-year free service"],
     benefits: ["Battery backup starts automatically during power cuts", "Save up to 80% on electricity bills from day one", "Eligible for PM Surya Ghar subsidy up to Rs 78,000", "Good for homes and shops in frequent power-cut areas"],
     process: [
@@ -65,7 +65,7 @@ const defaultServices = [
     title: "Off-grid Solar",
     badge: "No grid needed",
     tagline: "Fully independent solar power with battery storage for remote homes, farmhouses, and no-grid locations.",
-    description: "Fully independent solar power with battery storage. Ideal for remote homes, farmhouses, or areas without grid connection.",
+    description: "Complete energy independence — no grid connection required. Solar panels charge a battery bank that runs your farmhouse, remote home, or hill property day and night, replacing noisy diesel generators with silent, clean, free power.",
     details: ["Solar panel installation", "Off-grid inverter setup", "Battery bank setup", "MPPT charge controller", "Complete AC/DC wiring", "1-year free service"],
     benefits: ["Zero dependence on the electricity grid", "Works for remote villages, farms, and hill locations", "Reduces diesel generator running cost", "Battery stores power for night and cloudy-day use"],
     process: [
@@ -89,7 +89,7 @@ const defaultServices = [
     title: "Solar Water Pump",
     badge: "Farm support",
     tagline: "Run irrigation with sunlight and reduce diesel or electricity dependency for farm water pumping.",
-    description: "Ditch diesel pumps forever. Run irrigation with solar power and reduce fuel cost, maintenance headaches, and emissions.",
+    description: "Ditch diesel pumps forever. Solar panels power your borewell or surface pump straight from sunlight — zero fuel bills, zero engine maintenance, zero emissions. Eligible farmers can claim PM-KUSUM subsidy for major cost savings.",
     details: ["Solar panels for pump", "Solar pump controller or VFD", "Submersible or surface pump", "MS panel mounting structure", "DC cabling and earthing", "1-year free service"],
     benefits: ["Reduce diesel fuel cost for irrigation", "Runs directly on sunlight for daytime pumping", "PM KUSUM subsidy support may be available for eligible farmers", "Low maintenance with clean energy for fields"],
     process: [
@@ -113,7 +113,7 @@ const defaultServices = [
     title: "Commercial Solar",
     badge: "For businesses",
     tagline: "Large-scale rooftop solar for factories, offices, shops, and commercial buildings with strong ROI tracking.",
-    description: "Large-scale rooftop solar for factories, offices, and shops. Reduce operating costs and qualify for business benefits.",
+    description: "Turn your factory, office, or warehouse rooftop into a profit engine. Large-scale solar cuts commercial electricity bills by 70-90%, pays for itself in 3-5 years, and unlocks accelerated depreciation and input-credit benefits for your business.",
     details: ["High-capacity panel installation", "3-phase inverter setup", "Industrial mounting structure", "Net metering and DISCOM sync", "Remote monitoring system", "1-year free AMC"],
     benefits: ["Reduce factory, office, or shop electricity bills by 70-90%", "Businesses may claim depreciation and input-credit benefits as applicable", "Strong ROI with typical payback in 3-5 years", "Improve brand image with clean energy adoption"],
     process: [
@@ -137,7 +137,7 @@ const defaultServices = [
     title: "AMC & Maintenance",
     badge: "Keep it running",
     tagline: "Annual maintenance contracts to clean panels, check inverters, and keep output strong all year.",
-    description: "Annual maintenance contracts to clean panels, check inverters, and ensure your solar system gives peak output all year round.",
+    description: "Keep your solar system generating peak power year after year. Scheduled panel cleaning, inverter health checks, wiring inspections, and priority breakdown support — backed by annual performance reports so you know exactly what your roof is earning.",
     details: ["Panel cleaning visits", "Inverter health check", "Battery inspection where applicable", "Wiring and earthing check", "Performance report", "Priority support"],
     benefits: ["Cleaning can restore generation lost due to dust", "Catch small issues before they become expensive repairs", "Priority response for breakdowns and performance complaints", "Annual report shows generation, savings, and system health"],
     process: [
@@ -166,7 +166,7 @@ const defaultProducts = [
     warranty: "25 yr warranty",
     color: "#1a5c35",
     icon: "▦",
-    description: "Main generation component for rooftop solar systems.",
+    description: "The heart of your solar system — high-efficiency Mono PERC panels that silently convert sunlight into clean electricity every single day. Engineered to deliver 25+ years of strong generation through India's heat, dust, and monsoon.",
     specs: [{ label: "Capacity", value: "550", unit: "Wp" }, { label: "Efficiency", value: "21.3", unit: "%" }, { label: "Type", value: "Mono PERC", unit: "" }],
     benefits: ["High rooftop generation output", "25-year performance guarantee", "Suitable for all roof types", "Low maintenance cost"],
     install: ["Selected by roof area and load", "Mounted on GI structure", "Used in final customer quote", "MNRE-approved options available"],
@@ -182,7 +182,7 @@ const defaultProducts = [
     warranty: "5 yr warranty",
     color: "#1a4a8a",
     icon: "⚡",
-    description: "Converts DC solar power to AC for home, business, and grid use.",
+    description: "The brain of your solar setup. Smartly converts DC power from your panels into clean AC electricity for every appliance in your home or business — with grid-sync, mobile app monitoring, and instant fault protection built in.",
     specs: [{ label: "Output", value: "3.5", unit: "kW" }, { label: "Efficiency", value: "98.2", unit: "%" }, { label: "Type", value: "String", unit: "" }],
     benefits: ["Pure sine wave output", "Grid-tied compatible", "Auto shutdown on fault", "Remote monitoring app support"],
     install: ["Sized to match panel capacity", "Wall mounted near DB", "Connected to ACDB box", "Grid sync configured"],
@@ -198,7 +198,7 @@ const defaultProducts = [
     warranty: "2 yr warranty",
     color: "#8a4a1a",
     icon: "⛓",
-    description: "Distribution boxes for safe AC and DC power management.",
+    description: "The safety shield for your solar system. IP65-rated distribution boxes that protect your inverter, wiring, and appliances from short circuits, lightning surges, and overloads — keeping every AC and DC circuit cleanly isolated and serviceable.",
     specs: [{ label: "AC Breaker", value: "32", unit: "A" }, { label: "DC Fuse", value: "15", unit: "A" }, { label: "IP Rating", value: "IP65", unit: "" }],
     benefits: ["Surge and overload protection", "Weatherproof enclosure", "Separate AC and DC circuits", "Easy fault isolation"],
     install: ["Mounted near inverter", "DC side from panels", "AC side to grid or load", "Earthing connected"],
@@ -214,7 +214,7 @@ const defaultProducts = [
     warranty: "10 yr warranty",
     color: "#5a3a9a",
     icon: "▣",
-    description: "Stores solar energy for night use and power backup.",
+    description: "Store the sun for after sunset. LiFePO4 lithium batteries hold the extra solar energy you generate during the day and power your home through outages and nighttime — with 6000+ deep cycles and zero maintenance for over a decade.",
     specs: [{ label: "Capacity", value: "5", unit: "kWh" }, { label: "Cycles", value: "6000", unit: "+" }, { label: "Type", value: "LiFePO4", unit: "" }],
     benefits: ["Power backup during outages", "Use solar energy at night", "Reduces grid dependency", "Battery management protection"],
     install: ["Sized by daily usage", "Paired with hybrid inverter", "Wall or floor mounted", "BMS configured during setup"],
@@ -230,7 +230,7 @@ const defaultProducts = [
     warranty: "1 yr warranty",
     color: "#0a7a7a",
     icon: "↔",
-    description: "Bidirectional meter for grid export and import tracking.",
+    description: "Earn credit for every extra unit you generate. A DISCOM-approved bidirectional meter that tracks solar units exported to the grid and units imported back — turning your rooftop into a mini power plant that pays you back every month.",
     specs: [{ label: "Type", value: "Bi-dir", unit: "" }, { label: "Accuracy", value: "Class", unit: "1.0" }, { label: "Use", value: "Import", unit: "/ Export" }],
     benefits: ["Tracks exported solar energy", "Enables net billing savings", "Required for subsidy process", "DISCOM-approved meter support"],
     install: ["Applied through DISCOM", "Installed by utility team", "Replaces existing meter", "Connected to inverter output"],
@@ -246,7 +246,7 @@ const defaultProducts = [
     warranty: "5 yr warranty",
     color: "#8a6a1a",
     icon: "⌁",
-    description: "Weatherproof DC wiring connecting panels to inverter.",
+    description: "The arteries of your solar system. UV-resistant DC cables with locking MC4 connectors carry power from your panels to the inverter — engineered for 1000V DC, IP68 weather sealing, and 25 years of rooftop exposure without degradation.",
     specs: [{ label: "Wire size", value: "4", unit: "mm2" }, { label: "Rating", value: "1000", unit: "V DC" }, { label: "IP Rating", value: "IP68", unit: "" }],
     benefits: ["UV and weather resistant", "Locking solar connector", "Outdoor-rated cable life", "Reduces DC loss with proper sizing"],
     install: ["Run from panel to inverter", "Sized by system current", "Managed with proper routing", "Earthing cable included"],
@@ -262,7 +262,7 @@ const defaultProducts = [
     warranty: "10 yr warranty",
     color: "#6a6a1a",
     icon: "△",
-    description: "GI or aluminium frame system for secure panel installation.",
+    description: "The skeleton that holds your panels through every storm. Hot-dip galvanized steel or aluminium frames engineered for 150 km/h winds and optimum tilt — built to last as long as the panels they support, on RCC slabs or sheet roofs.",
     specs: [{ label: "Material", value: "GI", unit: "/ Aluminium" }, { label: "Tilt", value: "10-25", unit: "deg" }, { label: "Wind load", value: "150", unit: "km/h" }],
     benefits: ["Anti-rust structure options", "Tilt planned for better yield", "Suitable for RCC and sheet roof", "Fast pre-engineered installation"],
     install: ["Roof type assessed first", "Structure designed per load", "Anchor bolts fixed to roof", "Panels clamped on rails"],
@@ -278,7 +278,7 @@ const defaultProducts = [
     warranty: "3 yr warranty",
     color: "#1a5a9a",
     icon: "◌",
-    description: "Solar-powered pump for agriculture and water supply.",
+    description: "Free water from free sunlight. Run borewells and irrigation pumps directly off solar power — no diesel, no electricity bill. Includes VFD controller, dry-run protection, and PM-KUSUM subsidy support for eligible farmers across India.",
     specs: [{ label: "Power", value: "2.5", unit: "HP" }, { label: "Head", value: "50", unit: "m" }, { label: "Type", value: "Submersible", unit: "" }],
     benefits: ["Zero electricity bill for pumping", "Runs directly on solar panels", "Ideal for agriculture and borewell", "PM-KUSUM support where applicable"],
     install: ["Panel sizing by pump HP", "VFD controller included", "Pump installed in borewell", "Dry-run protection sensor"],
@@ -416,9 +416,13 @@ function bindNav() {
 
 function ensureHomeNavLink(nav) {
   const page = document.body.dataset.page || "";
-  if (page === "home" || nav.querySelector("[data-home-link]")) return;
-  nav.insertAdjacentHTML("afterbegin", `
-    <a class="home-nav-link" href="/index.html" aria-label="Go to home page" title="Home" data-home-link>
+  if (page === "home" || document.querySelector("[data-home-link]")) return;
+  // Place the Home icon in the header (next to the hamburger toggle on mobile,
+  // or as the first nav item on desktop). NOT inside the dropdown menu.
+  const toggle = document.querySelector("[data-nav-toggle]");
+  const headerActions = document.querySelector(".header-actions");
+  const homeHtml = `
+    <a class="home-nav-link" href="index.html" aria-label="Go to home page" title="Home" data-home-link>
       <span class="home-nav-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" focusable="false">
           <path d="M3 10.8 12 3l9 7.8"/>
@@ -427,7 +431,15 @@ function ensureHomeNavLink(nav) {
         </svg>
       </span>
     </a>
-  `);
+  `;
+  if (headerActions) {
+    // Desktop + mobile: live inside header-actions, before Register/Login buttons
+    headerActions.insertAdjacentHTML("afterbegin", homeHtml);
+  } else if (toggle && toggle.parentElement) {
+    toggle.insertAdjacentHTML("beforebegin", homeHtml);
+  } else {
+    nav.insertAdjacentHTML("afterbegin", homeHtml);
+  }
 }
 
 function bindFloatingContact() {
