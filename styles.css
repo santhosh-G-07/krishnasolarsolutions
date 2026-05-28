@@ -5002,6 +5002,12 @@ body {
   letter-spacing: 0.02em;
 }
 
+.brand small {
+  color: #4f666f;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
 .button,
 .mini-button,
 .auth-link {
@@ -5074,8 +5080,14 @@ body {
   border-radius: clamp(16px, 2.1vw, 24px);
   box-shadow: 0 20px 40px rgba(7, 24, 30, 0.3);
   backdrop-filter: blur(10px);
+  max-width: min(640px, 54%);
+  padding: clamp(18px, 1.7vw, 28px);
   animation: kssPanelGlow 7s ease-in-out infinite;
   transition: transform 0.28s ease, box-shadow 0.28s ease;
+}
+
+.hero-title {
+  text-shadow: 0 5px 16px rgba(0, 0, 0, 0.4);
 }
 
 .quote-kicker {
@@ -5311,6 +5323,137 @@ body {
 .contact-float.open .contact-float-main::before {
   animation-play-state: paused;
   opacity: 0;
+}
+
+/* Laptop header compaction: keep brand line visible and avoid nav crowding */
+@media (max-width: 1280px) {
+  .site-header {
+    gap: 10px;
+    padding: 10px 14px;
+  }
+
+  .brand {
+    flex: 1 1 auto;
+    min-width: 248px;
+  }
+
+  .brand strong {
+    font-size: 1.2rem;
+  }
+
+  .brand small {
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+    width: 42px;
+  }
+
+  .site-nav {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    display: none;
+    left: 14px;
+    margin-left: 0;
+    max-height: calc(100vh - 88px);
+    overflow-y: auto;
+    padding: 10px;
+    position: absolute;
+    right: 14px;
+    top: 68px;
+  }
+
+  .site-nav.open {
+    animation: kssMenuDrop 0.25s ease both;
+    display: grid;
+  }
+
+  .site-nav a,
+  .nav-dropdown > button,
+  .nav-dropdown > a {
+    border-radius: 8px;
+    justify-content: flex-start;
+    min-height: 44px;
+    width: 100%;
+  }
+
+  .nav-dropdown {
+    display: grid;
+    gap: 6px;
+  }
+
+  .nav-dropdown > button,
+  .nav-dropdown > a {
+    background: var(--band);
+    font-weight: 800;
+  }
+
+  .site-nav.open .dropdown-menu {
+    box-shadow: none;
+    display: grid;
+    min-width: 0;
+    padding: 4px 0 8px 12px;
+    position: static;
+  }
+}
+
+/* Laptop hero fit */
+@media (min-width: 1024px) and (max-width: 1400px) {
+  .hero {
+    padding: 14px 18px 24px;
+  }
+
+  .hero-slider {
+    min-height: min(760px, calc(100svh - 92px));
+  }
+
+  .quote-panel {
+    gap: 12px;
+    left: clamp(18px, 2.2vw, 34px);
+    max-width: min(620px, 55%);
+    top: 48%;
+  }
+
+  .hero-title {
+    font-size: clamp(1.08rem, 0.62rem + 0.82vw, 1.38rem);
+    letter-spacing: 0.06em;
+  }
+
+  .hero-subtitle {
+    font-size: clamp(0.96rem, 0.68rem + 0.58vw, 1.12rem);
+    line-height: 1.5;
+  }
+
+  .quote-panel p {
+    font-size: clamp(2.5rem, 3.9vw, 3.95rem);
+    line-height: 1.05;
+  }
+
+  .quote-panel small {
+    font-size: clamp(0.94rem, 0.74rem + 0.42vw, 1.06rem);
+  }
+
+  .hero-actions {
+    gap: 10px;
+  }
+
+  .hero-actions .button {
+    min-height: 42px;
+    padding: 10px 14px;
+  }
+
+  .hero-metrics {
+    bottom: 18px;
+    right: 18px;
+  }
 }
 
 @media (max-width: 980px) {
