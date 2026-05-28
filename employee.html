@@ -101,6 +101,69 @@ tr:hover td{background:#f9fafb}
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--g);color:#fff;padding:.75rem 1.25rem;border-radius:10px;font-size:13px;z-index:999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2)}
 .toast.err{background:var(--rd)}.toast.show{display:block}
 .empty{text-align:center;padding:3rem 1rem;color:var(--tx3)}
+
+html,body{overflow-x:hidden}
+body{
+  background:
+    radial-gradient(circle at 0% 0%, rgba(34,168,90,.12), transparent 28%),
+    radial-gradient(circle at 100% 10%, rgba(24,95,165,.12), transparent 30%),
+    var(--cr);
+}
+.main,.content{min-width:0}
+.table-wrap{overflow-x:auto}
+table{min-width:920px}
+.modal{box-shadow:0 24px 56px rgba(15,31,20,.24)}
+.lcard,.stat,.table-wrap,.dc{box-shadow:0 14px 32px rgba(13,74,42,.08)}
+#app{animation:kssFadeIn .32s ease both}
+@keyframes kssFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+@media (max-width:1200px){
+  .stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dg{grid-template-columns:1fr}
+}
+
+@media (max-width:980px){
+  .shell{display:block}
+  .sidebar{
+    position:sticky;top:0;z-index:30;width:100%;
+    box-shadow:0 12px 26px rgba(15,31,20,.22)
+  }
+  .sb-logo{padding:.9rem 1rem}
+  .sb-user{padding:.75rem 1rem}
+  nav.side{
+    display:flex;gap:.45rem;overflow-x:auto;
+    padding:.5rem .75rem .8rem
+  }
+  nav.side::-webkit-scrollbar{height:5px}
+  nav.side::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,.36);border-radius:999px
+  }
+  .ni{
+    border:1px solid rgba(255,255,255,.2);
+    border-radius:999px;
+    flex:0 0 auto;
+    padding:.45rem .85rem;
+    white-space:nowrap
+  }
+  .ni svg{display:none}
+  .sb-bot{padding:.75rem 1rem}
+  .main{min-height:calc(100vh - 168px)}
+  .topbar{flex-wrap:wrap;gap:.6rem;padding:.8rem 1rem}
+  .content{padding:1rem}
+  .table-header{align-items:stretch;flex-direction:column}
+  .sbox{max-width:none}
+  .tabs-bar{overflow-x:auto;width:100%}
+  .fg,.dg{grid-template-columns:1fr}
+  .mh,.mfoot{padding:.85rem 1rem}
+  .mbody{padding:1rem}
+}
+
+@media (max-width:760px){
+  .stats-row{grid-template-columns:1fr}
+  .modal{max-height:94vh}
+  .btn{min-height:40px}
+  table{min-width:760px}
+}
 </style>
 </head>
 <body>

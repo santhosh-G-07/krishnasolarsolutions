@@ -305,6 +305,8 @@ const appState = {
 };
 
 let pendingEditorFocus = null;
+let revealObserver = null;
+let countObserver = null;
 
 const storage = {
   get(key, fallback) {
@@ -393,6 +395,7 @@ function bindCommon() {
   bindFloatingContact();
   bindPasswordToggles();
   bindCopyActions();
+  initExperienceEnhancements();
   const logout = document.querySelector("[data-logout]");
   if (logout) logout.addEventListener("click", logoutUser);
 }
@@ -513,6 +516,8 @@ function initHome() {
   initCalculator();
   bindDetailDialog();
   bindContactCards();
+  initMobileDisclosures();
+  initExperienceEnhancements();
 }
 
 function initServicesPage() {
@@ -520,6 +525,7 @@ function initServicesPage() {
   const slug = currentServiceSlug();
   if (slug) renderServiceDetailPage(slug);
   else renderServicesPage();
+  initExperienceEnhancements();
 }
 
 function initProductsPage() {
@@ -527,6 +533,7 @@ function initProductsPage() {
   const slug = currentProductSlug();
   if (slug) renderProductDetailPage(slug);
   else renderProductsPage();
+  initExperienceEnhancements();
 }
 
 function renderMenusAndCards() {
@@ -1274,9 +1281,11 @@ async function submitLogin(event) {
 function initApplyPage() {
   if (!appState.currentUser || appState.currentUser.role !== "customer") {
     showApplyGate();
+    initExperienceEnhancements();
     return;
   }
   renderApplyForm();
+  initExperienceEnhancements();
 }
 
 function showApplyGate() {
@@ -2404,6 +2413,238 @@ function bindContactCards() {
   document.querySelectorAll("[data-contact-trigger]").forEach((button) => {
     button.addEventListener("click", () => button.closest("[data-contact-card]")?.classList.toggle("open"));
   });
+}
+
+function initMobileDisclosures() {
+  const groups = Array.from(document.querySelectorAll("[data-mobile-disclosure]"));
+  if (!groups.length) return;
+  const mobileQuery = window.matchMedia("(max-width: 760px)");
+
+  const ensureButton = (group) => {
+    let button = group.nextElementSibling;
+    if (button && button.classList.contains("mobile-reveal-btn")) return button;
+    button = document.createElement("button");
+    button.type = "button";
+    button.className = "mobile-reveal-btn";
+    button.addEventListener("click", () => {
+      group.dataset.mobileExpanded = group.dataset.mobileExpanded === "true" ? "false" : "true";
+      applyGroup(group);
+    });
+    group.insertAdjacentElement("afterend", button);
+    return button;
+  };
+
+  const applyGroup = (group) => {
+    const selector = group.dataset.mobileItems || "article";
+    const items = Array.from(group.querySelectorAll(`:scope > ${selector}`));
+    if (items.length <= 2) return;
+    const button = ensureButton(group);
+    if (!mobileQuery.matches) {
+      items.forEach((item) => item.classList.remove("kss-mobile-hidden"));
+      group.dataset.mobileExpanded = "false";
+      button.classList.remove("show");
+      button.setAttribute("aria-expanded", "false");
+      button.textContent = "View more";
+      return;
+    }
+    const expanded = group.dataset.mobileExpanded === "true";
+    items.forEach((item, index) => item.classList.toggle("kss-mobile-hidden", !expanded && index >= 2));
+    button.classList.add("show");
+    button.setAttribute("aria-expanded", String(expanded));
+    button.textContent = expanded ? "View less" : "View more";
+  };
+
+  const applyAll = () => groups.forEach((group) => applyGroup(group));
+  applyAll();
+
+  const onChange = () => applyAll();
+  if (typeof mobileQuery.addEventListener === "function") {
+    mobileQuery.addEventListener("change", onChange);
+  } else if (typeof mobileQuery.addListener === "function") {
+    mobileQuery.addListener(onChange);
+  }
+}
+
+function initExperienceEnhancements() {
+  initHeaderScrollState();
+  initScrollReveal();
+  initHeroParallax();
+  initCountUpEffects();
+}
+
+function initHeaderScrollState() {
+  const header = document.querySelector(".site-header");
+  if (!header) return;
+  const applyHeaderState = () => header.classList.toggle("scrolled", window.scrollY > 14);
+  applyHeaderState();
+  if (header.dataset.scrollBound === "true") return;
+  window.addEventListener("scroll", applyHeaderState, { passive: true });
+  header.dataset.scrollBound = "true";
+}
+
+function initScrollReveal() {
+  const revealGroups = [
+    [".section-heading", "up"],
+    [".hero-metrics div, .service-step-card, .product-feature-row", "up"],
+    [".why-card-grid article, .about-stat-grid article, .process-grid article, .choose-strip article, .review-feature-grid article", "up"],
+    [".service-page-card, .product-page-card, .application-card, .dashboard-grid article, .dashboard-tools", "zoom"],
+    [".home-services-copy, .home-products-copy, .why-content, .about-copy", "left"],
+    [".service-steps, .product-feature-panel, .why-visual, .about-stat-grid", "right"]
+  ];
+
+  revealGroups.forEach(([selector, style]) => {
+    document.querySelectorAll(selector).forEach((node, index) => {
+      if (!node.hasAttribute("data-reveal")) node.setAttribute("data-reveal", style);
+      if (!node.style.getPropertyValue("--reveal-delay")) {
+        const delay = Math.min(index, 6) * 70;
+        node.style.setProperty("--reveal-delay", `${delay}ms`);
+      }
+    });
+  });
+
+  const targets = Array.from(document.querySelectorAll("[data-reveal]"));
+  if (!targets.length) return;
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion || typeof IntersectionObserver !== "function") {
+    targets.forEach((target) => target.classList.add("is-visible"));
+    return;
+  }
+
+  if (!revealObserver) {
+    revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("is-visible");
+        revealObserver.unobserve(entry.target);
+      });
+    }, { threshold: 0.16, rootMargin: "0px 0px -8% 0px" });
+  }
+
+  targets.forEach((target) => {
+    if (target.dataset.revealBound === "true") return;
+    target.dataset.revealBound = "true";
+    revealObserver.observe(target);
+  });
+}
+
+function initHeroParallax() {
+  const hero = document.querySelector("[data-hero-slider]");
+  const panel = document.querySelector(".quote-panel");
+  if (!hero || !panel || hero.dataset.parallaxBound === "true") return;
+  hero.dataset.parallaxBound = "true";
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion) return;
+
+  const mobileQuery = window.matchMedia("(max-width: 980px)");
+  const resetPanel = () => {
+    panel.style.transform = "";
+  };
+
+  hero.addEventListener("pointermove", (event) => {
+    if (mobileQuery.matches) return;
+    const rect = hero.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 12;
+    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 10;
+    panel.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+  });
+
+  hero.addEventListener("pointerleave", resetPanel);
+  if (typeof mobileQuery.addEventListener === "function") {
+    mobileQuery.addEventListener("change", (event) => {
+      if (event.matches) resetPanel();
+    });
+  } else if (typeof mobileQuery.addListener === "function") {
+    mobileQuery.addListener((event) => {
+      if (event.matches) resetPanel();
+    });
+  }
+}
+
+function initCountUpEffects() {
+  const targets = Array.from(document.querySelectorAll(
+    ".hero-metrics strong, .why-stats strong, .about-stat-grid strong, .rating-score strong"
+  ));
+  if (!targets.length) return;
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion || typeof IntersectionObserver !== "function") {
+    targets.forEach((node) => {
+      node.dataset.countBound = "true";
+      node.dataset.countDone = "true";
+    });
+    return;
+  }
+
+  if (!countObserver) {
+    countObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        animateCountNode(entry.target);
+        countObserver.unobserve(entry.target);
+      });
+    }, { threshold: 0.58, rootMargin: "0px 0px -4% 0px" });
+  }
+
+  targets.forEach((node) => {
+    if (node.dataset.countBound === "true") return;
+    if (!parseCountToken(node.textContent)) return;
+    node.dataset.countBound = "true";
+    countObserver.observe(node);
+  });
+}
+
+function parseCountToken(text) {
+  const valueText = String(text || "").replace(/\s+/g, " ").trim();
+  if (!valueText) return null;
+  const match = valueText.match(/-?\d+(?:,\d{3})*(?:\.\d+)?/);
+  if (!match) return null;
+  const numeric = match[0];
+  const number = Number(numeric.replace(/,/g, ""));
+  if (!Number.isFinite(number)) return null;
+  const index = match.index || 0;
+  const decimals = numeric.includes(".") ? numeric.split(".")[1].length : 0;
+  return {
+    number,
+    decimals,
+    prefix: valueText.slice(0, index),
+    suffix: valueText.slice(index + numeric.length)
+  };
+}
+
+function animateCountNode(node) {
+  if (!node || node.dataset.countDone === "true") return;
+  const parsed = parseCountToken(node.textContent);
+  if (!parsed) {
+    node.dataset.countDone = "true";
+    return;
+  }
+
+  const { number, decimals, prefix, suffix } = parsed;
+  const duration = Math.min(1600, 680 + Math.abs(number) * 6);
+  const startTime = performance.now();
+  const format = (value) => {
+    const rounded = decimals > 0 ? Number(value.toFixed(decimals)) : Math.round(value);
+    const localized = rounded.toLocaleString("en-IN", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
+    });
+    return `${prefix}${localized}${suffix}`;
+  };
+
+  const tick = (now) => {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    node.textContent = format(number * eased);
+    if (progress < 1) {
+      window.requestAnimationFrame(tick);
+      return;
+    }
+    node.dataset.countDone = "true";
+  };
+
+  node.textContent = format(0);
+  window.requestAnimationFrame(tick);
 }
 
 function statusClass(status) {
