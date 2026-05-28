@@ -354,8 +354,8 @@ a {
   left: clamp(26px, 5vw, 78px);
   max-width: min(560px, 52%);
   position: absolute;
-  top: 46%;
-  transform: translateY(-50%);
+  top: clamp(68px, 11vh, 116px);
+  transform: none;
   z-index: 3;
 }
 
@@ -380,7 +380,7 @@ a {
 }
 
 .quote-panel.changing {
-  animation: quoteSwap 0.72s ease;
+  animation: none;
 }
 
 .quote-panel.changing .quote-kicker {
@@ -4047,11 +4047,11 @@ th {
 @keyframes quoteSwap {
   0% {
     opacity: 0;
-    transform: translateY(calc(-50% + 18px));
+    transform: translateY(10px);
   }
   100% {
     opacity: 1;
-    transform: translateY(-50%);
+    transform: translateY(0);
   }
 }
 
@@ -4409,7 +4409,7 @@ th {
     gap: 10px;
     left: 18px;
     max-width: calc(100% - 36px);
-    top: 42%;
+    top: 76px;
   }
 
   .quote-panel p {
@@ -4824,7 +4824,7 @@ th {
   .quote-panel {
     left: 16px;
     max-width: calc(100% - 32px);
-    top: 38%;
+    top: 66px;
   }
 
   .hero-title {
@@ -5419,7 +5419,7 @@ body {
     gap: 12px;
     left: clamp(18px, 2.2vw, 34px);
     max-width: min(620px, 55%);
-    top: 48%;
+    top: clamp(72px, 10vh, 112px);
   }
 
   .hero-title {
@@ -5475,7 +5475,7 @@ body {
   }
 
   .quote-panel {
-    top: 41%;
+    top: 72px;
   }
 
   .home-services-inner,

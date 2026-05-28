@@ -2528,37 +2528,10 @@ function initScrollReveal() {
 }
 
 function initHeroParallax() {
-  const hero = document.querySelector("[data-hero-slider]");
   const panel = document.querySelector(".quote-panel");
-  if (!hero || !panel || hero.dataset.parallaxBound === "true") return;
-  hero.dataset.parallaxBound = "true";
-
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (reduceMotion) return;
-
-  const mobileQuery = window.matchMedia("(max-width: 980px)");
-  const resetPanel = () => {
-    panel.style.transform = "";
-  };
-
-  hero.addEventListener("pointermove", (event) => {
-    if (mobileQuery.matches) return;
-    const rect = hero.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 12;
-    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 10;
-    panel.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
-  });
-
-  hero.addEventListener("pointerleave", resetPanel);
-  if (typeof mobileQuery.addEventListener === "function") {
-    mobileQuery.addEventListener("change", (event) => {
-      if (event.matches) resetPanel();
-    });
-  } else if (typeof mobileQuery.addListener === "function") {
-    mobileQuery.addListener((event) => {
-      if (event.matches) resetPanel();
-    });
-  }
+  if (!panel) return;
+  // Keep hero copy stable; motion here caused panel drift on laptop layouts.
+  panel.style.transform = "";
 }
 
 function initCountUpEffects() {
