@@ -4526,9 +4526,16 @@ th {
     font-weight: 800;
   }
 
-  .site-nav.open .dropdown-menu {
-    display: grid;
+  .nav-dropdown .dropdown-menu {
+    display: none;
+    max-height: min(42svh, 280px);
     min-width: 0;
+    overflow-y: auto;
+    padding: 0 0 0 12px;
+  }
+
+  .nav-dropdown.mobile-open .dropdown-menu {
+    display: grid;
     padding: 4px 0 8px 12px;
   }
 
@@ -5334,7 +5341,7 @@ body {
 
   .brand {
     flex: 1 1 auto;
-    min-width: 248px;
+    min-width: 0;
   }
 
   .brand strong {
@@ -5396,12 +5403,19 @@ body {
     font-weight: 800;
   }
 
-  .site-nav.open .dropdown-menu {
+  .nav-dropdown .dropdown-menu {
     box-shadow: none;
-    display: grid;
+    display: none;
+    max-height: min(42svh, 280px);
     min-width: 0;
-    padding: 4px 0 8px 12px;
+    overflow-y: auto;
+    padding: 0 0 0 12px;
     position: static;
+  }
+
+  .nav-dropdown.mobile-open .dropdown-menu {
+    display: grid;
+    padding: 4px 0 8px 12px;
   }
 }
 

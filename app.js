@@ -404,15 +404,63 @@ function bindNav() {
   const toggle = document.querySelector("[data-nav-toggle]");
   const nav = document.querySelector("[data-nav]") || document.querySelector(".site-nav");
   if (!nav) return;
+  const mobileQuery = window.matchMedia("(max-width: 900px)");
   ensureHomeNavLink(nav);
+
+  const closeMobileDropdowns = () => {
+    nav.querySelectorAll(".nav-dropdown.mobile-open").forEach((group) => {
+      group.classList.remove("mobile-open");
+      const trigger = group.querySelector(".nav-dropdown-link, a");
+      if (trigger) trigger.setAttribute("aria-expanded", "false");
+    });
+  };
+
+  nav.querySelectorAll(".nav-dropdown > .nav-dropdown-link, .nav-dropdown > a").forEach((link) => {
+    link.setAttribute("aria-haspopup", "true");
+    link.setAttribute("aria-expanded", "false");
+    link.addEventListener("click", (event) => {
+      if (!mobileQuery.matches) return;
+      const group = link.closest(".nav-dropdown");
+      const menu = group?.querySelector(".dropdown-menu");
+      if (!group || !menu || !menu.children.length) return;
+      event.preventDefault();
+      const willOpen = !group.classList.contains("mobile-open");
+      if (!willOpen) {
+        group.classList.remove("mobile-open");
+        link.setAttribute("aria-expanded", "false");
+        return;
+      }
+      closeMobileDropdowns();
+      group.classList.add("mobile-open");
+      link.setAttribute("aria-expanded", "true");
+    });
+  });
+
   if (toggle) {
     toggle.addEventListener("click", () => {
       const isOpen = nav.classList.toggle("open");
       toggle.setAttribute("aria-expanded", String(isOpen));
+      if (!isOpen) closeMobileDropdowns();
     });
   }
-  nav.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => {
+  const onViewportChange = () => {
+    if (mobileQuery.matches) return;
+    closeMobileDropdowns();
     nav.classList.remove("open");
+    if (toggle) toggle.setAttribute("aria-expanded", "false");
+  };
+  if (typeof mobileQuery.addEventListener === "function") {
+    mobileQuery.addEventListener("change", onViewportChange);
+  } else if (typeof mobileQuery.addListener === "function") {
+    mobileQuery.addListener(onViewportChange);
+  }
+  nav.querySelectorAll("a").forEach((link) => link.addEventListener("click", (event) => {
+    const isMobileTopLevelDropdown = mobileQuery.matches &&
+      Boolean(link.closest(".nav-dropdown")) &&
+      !Boolean(link.closest(".dropdown-menu"));
+    if (isMobileTopLevelDropdown && event.defaultPrevented) return;
+    nav.classList.remove("open");
+    closeMobileDropdowns();
     if (toggle) toggle.setAttribute("aria-expanded", "false");
   }));
 }
