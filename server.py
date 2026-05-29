@@ -4,6 +4,7 @@ from pathlib import Path
 import base64
 import hashlib
 import hmac
+import html
 import json
 import os
 import re
@@ -554,6 +555,131 @@ def send_application_email(application):
     return send_smtp_message(message)
 
 
+def kss_email_shell_html(eyebrow, title, body_html):
+    return f"""<!doctype html>
+<html><body style="margin:0;padding:0;background:#faf8f3;font-family:Arial,Helvetica,sans-serif;color:#0f1f14">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 14px">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #c8dfd1;border-radius:16px;overflow:hidden">
+        <tr>
+          <td style="background:linear-gradient(135deg,#0d4a2a,#1a7a45);padding:26px 28px;color:#fff">
+            <div style="font-size:11px;letter-spacing:.14em;opacity:.78;font-weight:600">{eyebrow}</div>
+            <div style="font-size:22px;font-weight:700;margin-top:6px">{title}</div>
+          </td>
+        </tr>
+        <tr><td style="padding:28px">{body_html}</td></tr>
+        <tr>
+          <td style="padding:16px 28px;background:#faf8f3;border-top:1px solid #c8dfd1;font-size:11px;color:#7a9b85;text-align:center">
+            Krishna Solar Solutions (KSS) - Automated email
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>"""
+
+
+def send_registration_emails(customer):
+    mail_config = smtp_settings()
+    result = {
+        "customer": {"sent": False, "to": str(customer.get("email", "")).strip().lower(), "status": "Not attempted."},
+        "admin": {"sent": False, "to": NOTIFICATION_EMAIL, "status": "Not attempted."},
+    }
+    if not mail_config["user"] or not mail_config["pass"]:
+        result["customer"]["status"] = "SMTP not configured."
+        result["admin"]["status"] = "SMTP not configured."
+        return result
+
+    sender = mail_config["from"] or mail_config["user"]
+    customer_name = str(customer.get("name", "")).strip() or "Customer"
+    customer_phone = str(customer.get("phone", "")).strip() or "Not provided"
+    customer_email = str(customer.get("email", "")).strip().lower()
+
+    # 1) Welcome email to customer
+    if customer_email:
+        message = EmailMessage()
+        message["From"] = f"KSS Team <{sender}>"
+        message["To"] = customer_email
+        message["Subject"] = "Welcome to Krishna Solar Solutions (KSS)"
+        message.set_content(
+            "\n".join(
+                [
+                    f"Hi {customer_name},",
+                    "",
+                    "Your KSS customer account has been created successfully.",
+                    "You can now log in and submit your solar application.",
+                    "",
+                    "Thank you,",
+                    "Krishna Solar Solutions",
+                ]
+            )
+        )
+        welcome_html = kss_email_shell_html(
+            "KRISHNA SOLAR SOLUTIONS",
+            f"Welcome, {html.escape(customer_name)}",
+            (
+                "<p style='margin:0 0 12px;font-size:14px;line-height:1.6;color:#3d5c48'>"
+                "Your customer account was created successfully."
+                "</p>"
+                "<p style='margin:0 0 16px;font-size:14px;line-height:1.6;color:#3d5c48'>"
+                "You can now log in and submit your solar application."
+                "</p>"
+                "<div style='background:#f0faf4;border:1px solid #d4f0df;border-radius:10px;padding:14px 16px'>"
+                f"<div style='font-size:12px;color:#7a9b85'>Registered phone</div><div style='font-size:15px;font-weight:700;color:#0d4a2a'>{html.escape(customer_phone)}</div>"
+                f"<div style='font-size:12px;color:#7a9b85;margin-top:8px'>Registered email</div><div style='font-size:15px;font-weight:700;color:#0d4a2a'>{html.escape(customer_email)}</div>"
+                "</div>"
+            ),
+        )
+        message.add_alternative(welcome_html, subtype="html")
+        sent, status = send_smtp_message(message)
+        result["customer"]["sent"] = sent
+        result["customer"]["status"] = status
+    else:
+        result["customer"]["status"] = "Customer email missing."
+
+    # 2) Alert email to admin
+    if NOTIFICATION_EMAIL:
+        admin_message = EmailMessage()
+        admin_message["From"] = f"KSS Alerts <{sender}>"
+        admin_message["To"] = NOTIFICATION_EMAIL
+        admin_message["Subject"] = f"New customer registration - {customer_name}"
+        admin_message.set_content(
+            "\n".join(
+                [
+                    "A new customer registered on KSS website.",
+                    "",
+                    f"Name: {customer_name}",
+                    f"Phone: {customer_phone}",
+                    f"Email: {customer_email or 'Not provided'}",
+                    f"Customer ID: {customer.get('id', '')}",
+                ]
+            )
+        )
+        admin_html = kss_email_shell_html(
+            "KSS ADMIN ALERT",
+            "New customer registered",
+            (
+                "<p style='margin:0 0 12px;font-size:14px;line-height:1.6;color:#3d5c48'>"
+                "A new customer account was created from the website."
+                "</p>"
+                "<table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='border:1px solid #dfeae0;border-radius:10px'>"
+                f"<tr><td style='padding:10px 12px;border-bottom:1px solid #eef3ef;font-size:12px;color:#7a9b85'>Name</td><td style='padding:10px 12px;border-bottom:1px solid #eef3ef;font-size:14px;font-weight:600;color:#0f1f14'>{html.escape(customer_name)}</td></tr>"
+                f"<tr><td style='padding:10px 12px;border-bottom:1px solid #eef3ef;font-size:12px;color:#7a9b85'>Phone</td><td style='padding:10px 12px;border-bottom:1px solid #eef3ef;font-size:14px;font-weight:600;color:#0f1f14'>{html.escape(customer_phone)}</td></tr>"
+                f"<tr><td style='padding:10px 12px;border-bottom:1px solid #eef3ef;font-size:12px;color:#7a9b85'>Email</td><td style='padding:10px 12px;border-bottom:1px solid #eef3ef;font-size:14px;font-weight:600;color:#0f1f14'>{html.escape(customer_email or 'Not provided')}</td></tr>"
+                f"<tr><td style='padding:10px 12px;font-size:12px;color:#7a9b85'>Customer ID</td><td style='padding:10px 12px;font-size:14px;font-weight:600;color:#0f1f14'>{html.escape(str(customer.get('id', '')))}</td></tr>"
+                "</table>"
+            ),
+        )
+        admin_message.add_alternative(admin_html, subtype="html")
+        sent_admin, status_admin = send_smtp_message(admin_message)
+        result["admin"]["sent"] = sent_admin
+        result["admin"]["status"] = status_admin
+    else:
+        result["admin"]["status"] = "NOTIFICATION_EMAIL not configured."
+
+    return result
+
+
 # ===================== ADMIN PROFILE / OTP HELPERS =====================
 
 OTP_TTL_SECONDS = 300      # 5 minutes
@@ -976,7 +1102,8 @@ class KssHandler(SimpleHTTPRequestHandler):
                 raise e
             finally:
                 conn.close()
-            self.json_response(201, {"customer": public_user(customer), **bootstrap()})
+            mail_result = send_registration_emails(customer)
+            self.json_response(201, {"customer": public_user(customer), "mail": mail_result, **bootstrap()})
             return
 
         if self.path == "/api/login":
