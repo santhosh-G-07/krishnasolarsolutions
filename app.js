@@ -414,6 +414,11 @@ function bindNav() {
       if (trigger) trigger.setAttribute("aria-expanded", "false");
     });
   };
+  const closeMobileNav = () => {
+    nav.classList.remove("open");
+    closeMobileDropdowns();
+    if (toggle) toggle.setAttribute("aria-expanded", "false");
+  };
 
   nav.querySelectorAll(".nav-dropdown > .nav-dropdown-link, .nav-dropdown > a").forEach((link) => {
     link.setAttribute("aria-haspopup", "true");
@@ -445,23 +450,33 @@ function bindNav() {
   }
   const onViewportChange = () => {
     if (mobileQuery.matches) return;
-    closeMobileDropdowns();
-    nav.classList.remove("open");
-    if (toggle) toggle.setAttribute("aria-expanded", "false");
+    closeMobileNav();
   };
   if (typeof mobileQuery.addEventListener === "function") {
     mobileQuery.addEventListener("change", onViewportChange);
   } else if (typeof mobileQuery.addListener === "function") {
     mobileQuery.addListener(onViewportChange);
   }
+  const closeNavIfOutside = (event) => {
+    if (!mobileQuery.matches || !nav.classList.contains("open")) return;
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    if (nav.contains(target) || (toggle && toggle.contains(target))) return;
+    closeMobileNav();
+  };
+  const closeNavOnScroll = () => {
+    if (!mobileQuery.matches || !nav.classList.contains("open")) return;
+    closeMobileNav();
+  };
+  document.addEventListener("click", closeNavIfOutside);
+  document.addEventListener("touchstart", closeNavIfOutside, { passive: true });
+  window.addEventListener("scroll", closeNavOnScroll, { passive: true });
   nav.querySelectorAll("a").forEach((link) => link.addEventListener("click", (event) => {
     const isMobileTopLevelDropdown = mobileQuery.matches &&
       Boolean(link.closest(".nav-dropdown")) &&
       !Boolean(link.closest(".dropdown-menu"));
     if (isMobileTopLevelDropdown && event.defaultPrevented) return;
-    nav.classList.remove("open");
-    closeMobileDropdowns();
-    if (toggle) toggle.setAttribute("aria-expanded", "false");
+    closeMobileNav();
   }));
 }
 
