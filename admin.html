@@ -248,6 +248,32 @@ table{min-width:980px}
   .btn{min-height:40px}
   table{min-width:820px}
 }
+
+@media (max-width:560px){
+  .lcard{padding:1.5rem;max-width:94vw;width:100%}
+  .topbar-title{font-size:14px}
+  .topbar .btn{width:100%}
+  .table-wrap{border-radius:10px}
+  table{min-width:0}
+  th,td{padding:.58rem .7rem;font-size:12px}
+  .modal{width:96vw !important;border-radius:14px;max-height:95vh}
+  .mh h2{font-size:15px}
+  .mfoot{flex-direction:column}
+  .mfoot .btn{width:100%}
+  .profile-menu{left:.35rem;min-width:220px}
+  .table-wrap table{width:100%}
+  .table-wrap thead{display:none}
+  .table-wrap tbody{display:block;padding:8px}
+  .table-wrap tr{display:block;background:#fff;border:1px solid var(--br2);border-radius:10px;margin-bottom:10px;overflow:hidden}
+  .table-wrap tr:last-child{margin-bottom:0}
+  .table-wrap td{align-items:flex-start;border-bottom:1px dashed var(--br2);display:flex;font-size:12px;gap:10px;justify-content:space-between;line-height:1.45;padding:9px 10px;white-space:normal}
+  .table-wrap td:last-child{border-bottom:none}
+  .table-wrap td::before{color:var(--tx3);content:attr(data-label);flex:0 0 42%;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+  .table-wrap td[colspan]{display:block;text-align:center}
+  .table-wrap td[colspan]::before{content:none}
+  .table-wrap td > div[style*="display:flex"]{display:grid !important;gap:6px;grid-template-columns:1fr;width:100%}
+  .table-wrap td .btn{justify-content:center;width:100%}
+}
 </style>
 </head>
 <body>
@@ -1443,6 +1469,7 @@ function renderDash(){
       <td><span class="badge ${sb(a.status)}">${x(a.status)}</span></td>
       <td><button class="btn btn-outline btn-sm" onclick="viewApp('${a.id}')">View</button></td>
     </tr>`).join('')+`</tbody></table>`;
+  syncMobileTableLabels();
 }
 function empName(phone){if(!phone)return '—';const e=emps.find(x=>x.phone===phone);return e?e.name:phone;}
 
@@ -1461,7 +1488,7 @@ function renderApps(){
   if(ef)d=d.filter(a=>a.assignedTo===ef);
   if(q)d=d.filter(a=>a.name.toLowerCase().includes(q)||a.phone.includes(q)||(a.district||'').toLowerCase().includes(q));
   const tb=document.getElementById('atbody');
-  if(!d.length){tb.innerHTML='<tr><td colspan="8"><div class="empty">No applications found</div></td></tr>';return;}
+  if(!d.length){tb.innerHTML='<tr><td colspan="8"><div class="empty">No applications found</div></td></tr>';syncMobileTableLabels();return;}
   tb.innerHTML=d.map(a=>`<tr>
     <td><div style="font-weight:500">${x(a.name)}</div><div style="font-size:11px;color:var(--tx3)">${x(a.email)}</div></td>
     <td>${x(a.phone)}</td><td>${x(a.district)}</td>
@@ -1474,13 +1501,14 @@ function renderApps(){
       <button class="btn btn-outline btn-sm" onclick="openUpd('${a.id}')">Update</button>
     </div></td>
   </tr>`).join('');
+  syncMobileTableLabels();
 }
 function atab(el,t){document.querySelectorAll('#pg-apps .tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');atab_val=t;renderApps();}
 
 /* ---- EMPLOYEES TABLE ---- */
 function renderEmps(){
   const tb=document.getElementById('etbody');
-  if(!emps.length){tb.innerHTML='<tr><td colspan="6"><div class="empty">No employees yet</div></td></tr>';return;}
+  if(!emps.length){tb.innerHTML='<tr><td colspan="6"><div class="empty">No employees yet</div></td></tr>';syncMobileTableLabels();return;}
   tb.innerHTML=emps.map(emp=>`<tr>
     <td><div style="font-weight:500">${x(emp.name)}</div><div style="font-size:11px;color:var(--tx3)">${x(emp.email||'—')}</div></td>
     <td>${x(emp.phone)}</td>
@@ -1493,6 +1521,7 @@ function renderEmps(){
       <button class="btn btn-danger btn-sm" onclick="deactEmp('${emp.id}','${x(emp.name)}')">Remove</button>
     </div></td>
   </tr>`).join('');
+  syncMobileTableLabels();
 }
 
 /* ---- ADD APPLICATION ---- */
@@ -1602,6 +1631,17 @@ function closeM(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.mb').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
 function x(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function v(id){return document.getElementById(id).value.trim();}
+function syncMobileTableLabels(){
+  document.querySelectorAll('.table-wrap table').forEach((table)=>{
+    const headers=Array.from(table.querySelectorAll('thead th')).map((th)=>th.textContent.trim());
+    if(!headers.length)return;
+    table.querySelectorAll('tbody tr').forEach((row)=>{
+      row.querySelectorAll('td').forEach((cell,idx)=>{
+        cell.setAttribute('data-label',headers[idx]||'Detail');
+      });
+    });
+  });
+}
 function toast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(err?' err':'');setTimeout(()=>t.className='toast',3000);}
 async function api(url,data){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const j=await r.json();if(!r.ok)throw new Error(j.message||'Request failed');return j;}
 </script>
