@@ -1040,14 +1040,14 @@ function whatsappUrl(text) {
 
 function serviceImage(id, index) {
   const images = {
-    "on-grid-solar": "assets/solar-slide-rooftop.png",
-    "hybrid-solar": "assets/solar-slide-home.png",
-    "off-grid-solar": "assets/solar-slide-environment.png",
-    "solar-water-pump": "assets/solar-slide-agri.png",
-    "commercial-solar": "assets/solar-slide-install.png",
+    "on-grid-solar": "assets/solar-slide-rooftop.webp",
+    "hybrid-solar": "assets/solar-slide-home.webp",
+    "off-grid-solar": "assets/solar-slide-environment.webp",
+    "solar-water-pump": "assets/solar-slide-agri.webp",
+    "commercial-solar": "assets/solar-slide-install.webp",
     "amc-maintenance": "assets/renewable-energy.png"
   };
-  const fallback = ["assets/solar-slide-home.png", "assets/solar-slide-rooftop.png", "assets/solar-slide-install.png"];
+  const fallback = ["assets/solar-slide-home.webp", "assets/solar-slide-rooftop.webp", "assets/solar-slide-install.webp"];
   return images[id] || fallback[index % fallback.length];
 }
 
@@ -1062,9 +1062,10 @@ function focusLinkedService() {
   if (!id) return;
   const target = document.getElementById(id);
   if (!target) return;
+  const behavior = window.matchMedia("(max-width: 760px)").matches ? "auto" : "smooth";
   window.setTimeout(() => {
     target.classList.add("focused");
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    target.scrollIntoView({ behavior, block: "start" });
   }, 120);
 }
 
@@ -1231,10 +1232,23 @@ function initHeroSlider() {
   if (!slides.length || !dots) return;
   let activeIndex = 0;
   let timer;
+  const ensureSlideLoaded = (index) => {
+    const slide = slides[(index + slides.length) % slides.length];
+    if (!slide) return;
+    const source = slide.dataset.src;
+    if (!source) return;
+    slide.src = source;
+    slide.removeAttribute("data-src");
+    if (typeof slide.decode === "function") {
+      slide.decode().catch(() => {});
+    }
+  };
   dots.innerHTML = slides.map((_, index) => `<button class="${index === 0 ? "active" : ""}" type="button" aria-label="Show solar slide ${index + 1}" data-slide-dot="${index}"></button>`).join("");
   const buttons = Array.from(dots.querySelectorAll("[data-slide-dot]"));
   const show = (index) => {
     activeIndex = (index + slides.length) % slides.length;
+    ensureSlideLoaded(activeIndex);
+    ensureSlideLoaded(activeIndex + 1);
     slides.forEach((slide, slideIndex) => slide.classList.toggle("active", slideIndex === activeIndex));
     buttons.forEach((button, buttonIndex) => button.classList.toggle("active", buttonIndex === activeIndex));
     const quote = heroQuotes[activeIndex % heroQuotes.length];
@@ -1319,9 +1333,10 @@ async function submitRegister(event) {
   showToast("Registration complete. Now login to apply.");
   const login = document.querySelector("[data-login-form]");
   if (login) {
+    const behavior = window.matchMedia("(max-width: 760px)").matches ? "auto" : "smooth";
     login.elements.role.value = "customer";
     login.elements.username.value = customer.phone;
-    login.scrollIntoView({ behavior: "smooth", block: "center" });
+    login.scrollIntoView({ behavior, block: "center" });
   }
 }
 
@@ -1475,7 +1490,7 @@ async function submitApplication(event) {
     if (!saved) return showToast(api.lastError || "Application could not be saved.");
     syncBootstrap(saved);
     showToast("Application submitted. Admin notification created.");
-    window.setTimeout(() => { window.location.href = "dashboard.html"; }, 900);
+    window.location.href = "dashboard.html";
   } catch (error) {
     showToast(error.message || "Document upload failed.");
   } finally {

@@ -888,6 +888,13 @@ body[data-page="auth"] nav,
   body { font-size: 15px; }
 }
 
+@media (max-width: 760px) {
+  html { scroll-behavior: auto; }
+  a, button, [role="button"], input[type="button"], input[type="submit"] {
+    touch-action: manipulation;
+  }
+}
+
 /* ============================================================
    KEYFRAMES (used by nav open animation)
    ============================================================ */

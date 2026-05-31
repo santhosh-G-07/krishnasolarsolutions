@@ -1022,6 +1022,8 @@ class KssHandler(SimpleHTTPRequestHandler):
             return "services.html"
         if parsed_path == "/products" or parsed_path.startswith("/products/"):
             return "products.html"
+        if parsed_path in {"/contact", "/contact-us", "/about", "/about-us"}:
+            return "index.html"
         return ""
 
     def translate_path(self, path):
@@ -1032,11 +1034,15 @@ class KssHandler(SimpleHTTPRequestHandler):
 
     def json_response(self, status, data):
         payload = json.dumps(data).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(payload)))
-        self.end_headers()
-        self.wfile.write(payload)
+        try:
+            self.send_response(status)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+        except (BrokenPipeError, ConnectionResetError):
+            # Client closed the socket before response write completed.
+            return
 
     def read_json(self):
         length = int(self.headers.get("Content-Length", "0"))
@@ -1045,16 +1051,20 @@ class KssHandler(SimpleHTTPRequestHandler):
         return json.loads(self.rfile.read(length).decode("utf-8"))
 
     def do_GET(self):
-        parsed_path = urllib.parse.urlparse(self.path).path
-        if parsed_path == "/api/bootstrap":
-            self.json_response(200, bootstrap() if DB_READY else offline_bootstrap())
-            return
-        shell_page = self.route_shell_page()
-        if shell_page:
-            self.path = f"/{shell_page}"
+        try:
+            parsed_path = urllib.parse.urlparse(self.path).path
+            if parsed_path == "/api/bootstrap":
+                self.json_response(200, bootstrap() if DB_READY else offline_bootstrap())
+                return
+            shell_page = self.route_shell_page()
+            if shell_page:
+                self.path = f"/{shell_page}"
+                super().do_GET()
+                return
             super().do_GET()
+        except (BrokenPipeError, ConnectionResetError):
+            # Common on mobile clients/bots cancelling static file downloads mid-stream.
             return
-        super().do_GET()
 
     def do_POST(self):
         try:
