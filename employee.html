@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KSS – Employee Dashboard</title>
+<meta name="robots" content="noindex,nofollow,noarchive"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--g:#0d4a2a;--g2:#1a7a45;--g3:#d4f0df;--g4:#f0faf4;--bl:#185fa5;--bl2:#e6eef9;--am:#92400e;--am2:#fef3c7;--rd:#991b1b;--rd2:#fee2e2;--cr:#faf8f3;--br:#c8dfd1;--br2:#e5e7eb;--tx:#0f1f14;--tx2:#3d5c48;--tx3:#7a9b85;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--cr);color:var(--tx);font-size:14px}
+.shell{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--g);flex-shrink:0;display:flex;flex-direction:column}
+.sb-logo{padding:1.2rem;border-bottom:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:10px}
+.sb-logo .logo-img{width:38px;height:38px;border-radius:9px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,.1)}
+.sb-logo .logo-img img{width:100%;height:100%;object-fit:cover;display:block}
+.sb-logo .logo-text{min-width:0;flex:1}
+.sb-logo .brand{font-family:'Fraunces',serif;font-size:16px;color:#fff;font-weight:700;line-height:1.1}
+.sb-logo .sub{font-size:10px;color:rgba(255,255,255,.55);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-user{padding:.9rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:10px}
+.sb-user>div:last-child{min-width:0;flex:1}
+.u-name,.u-role{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.av{width:34px;height:34px;border-radius:50%;background:var(--g2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0}
+.u-name{font-size:12px;color:#fff;font-weight:500}.u-role{font-size:10px;color:rgba(255,255,255,.5)}
+nav.side{padding:.6rem 0;flex:1}
+.ni{display:flex;align-items:center;gap:10px;padding:.6rem 1.2rem;font-size:13px;color:rgba(255,255,255,.7);cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:background .15s}
+.ni:hover{background:rgba(255,255,255,.08);color:#fff}
+.ni.active{background:rgba(255,255,255,.15);color:#fff;font-weight:500}
+.ni svg{width:16px;height:16px;flex-shrink:0;opacity:.7}.ni.active svg{opacity:1}
+.sb-bot{padding:1rem 1.2rem;border-top:1px solid rgba(255,255,255,.1);margin-top:auto}
+.sb-bot button{width:100%;padding:8px;border-radius:8px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border:none;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif}
+.sb-bot button:hover{background:rgba(255,255,255,.2);color:#fff}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:#fff;border-bottom:1px solid var(--br);padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
+.topbar-title{font-size:16px;font-weight:500}
+.btn{padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn-primary{background:var(--g);color:#fff}.btn-primary:hover{background:var(--g2)}
+.btn-primary:disabled{background:#999;cursor:not-allowed}
+.btn-outline{background:#fff;color:var(--tx2);border:1px solid var(--br)}.btn-outline:hover{background:var(--cr)}
+.btn-sm{padding:5px 10px;font-size:12px;border-radius:6px}
+.content{padding:1.5rem;overflow-y:auto;flex:1}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+.stat{background:#fff;border:1px solid var(--br);border-radius:12px;padding:1rem 1.25rem}
+.stat-val{font-size:26px;font-weight:500;color:var(--g);margin-bottom:2px}
+.stat-lbl{font-size:12px;color:var(--tx3)}
+.tabs-bar{display:flex;gap:4px;background:#fff;border:1px solid var(--br);border-radius:10px;padding:4px;margin-bottom:1.25rem;width:fit-content}
+.tab{padding:6px 14px;border-radius:7px;font-size:13px;cursor:pointer;border:none;background:transparent;color:var(--tx3);font-family:'DM Sans',sans-serif;transition:all .15s}
+.tab.active{background:var(--g);color:#fff;font-weight:500}
+.table-wrap{background:#fff;border:1px solid var(--br);border-radius:14px;overflow:hidden}
+.table-header{padding:.85rem 1.25rem;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.sbox{display:flex;align-items:center;gap:8px;background:var(--g4);border:1px solid var(--br);border-radius:8px;padding:7px 12px;flex:1;max-width:280px}
+.sbox input{border:none;background:transparent;outline:none;font-size:13px;width:100%;font-family:'DM Sans',sans-serif;color:var(--tx)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:var(--g4)}
+th{padding:.65rem 1rem;text-align:left;font-size:11px;font-weight:500;color:var(--tx3);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+td{padding:.7rem 1rem;font-size:13px;border-bottom:1px solid var(--br2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f9fafb}
+.own td{background:#fafffd}
+.badge{display:inline-block;font-size:10px;padding:3px 9px;border-radius:20px;font-weight:500}
+.bg-green{background:var(--g3);color:var(--g)}.bg-blue{background:var(--bl2);color:var(--bl)}
+.bg-amber{background:var(--am2);color:var(--am)}.bg-red{background:var(--rd2);color:var(--rd)}.bg-gray{background:#f3f4f6;color:#4b5563}
+.mb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center}
+.mb.open{display:flex}
+.modal{background:#fff;border-radius:18px;width:740px;max-width:96vw;max-height:90vh;overflow-y:auto}
+.mh{padding:1.2rem 1.5rem;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:2}
+.mh h2{font-size:17px;font-weight:500}
+.mbody{padding:1.5rem}
+.mclose{background:none;border:none;font-size:22px;cursor:pointer;color:var(--tx3);line-height:1}
+.mfoot{padding:1rem 1.5rem;border-top:1px solid var(--br);display:flex;justify-content:flex-end;gap:10px;position:sticky;bottom:0;background:#fff}
+.fs{margin-bottom:1.5rem}
+.fst{font-size:11px;font-weight:500;color:var(--g);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--g3)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:.875rem}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--tx2);margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;padding:9px 12px;border:1px solid var(--br);border-radius:8px;font-size:13px;color:var(--tx);background:var(--g4);font-family:'DM Sans',sans-serif;outline:none;transition:border .15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--g2);background:#fff}
+.field textarea{resize:vertical;min-height:75px}
+.ff{grid-column:1/-1}
+.fu{border:2px dashed var(--br);border-radius:10px;padding:1.25rem;text-align:center;cursor:pointer;background:var(--g4);transition:all .2s}
+.fu:hover{border-color:var(--g2);background:#e8f5ed}
+.fu input{display:none}
+.flist{margin-top:.75rem;display:flex;flex-direction:column;gap:6px}
+.fitem{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--br);border-radius:7px;padding:7px 10px;font-size:12px}
+.fitem-nm{flex:1}
+.fitem-rm{background:none;border:none;color:var(--rd);cursor:pointer;font-size:16px;line-height:1}
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.dc{background:#fff;border:1px solid var(--br);border-radius:12px;padding:1rem 1.25rem}
+.dct{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:.75rem}
+.dr{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid var(--br2);font-size:13px;gap:8px}
+.dr:last-child{border-bottom:none}
+.dl{color:var(--tx3);flex-shrink:0}
+.dv{font-weight:500;text-align:right}
+.doc-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--g4);border-radius:8px;border:1px solid var(--g3);font-size:12px;margin-bottom:6px}
+#ls{position:fixed;inset:0;background:var(--cr);display:flex;align-items:center;justify-content:center;z-index:200}
+.lcard{background:#fff;border:1px solid var(--br);border-radius:20px;padding:2.5rem;width:400px;max-width:95vw}
+.l-logo{font-family:'Fraunces',serif;font-size:32px;font-weight:700;color:var(--g);margin-bottom:.25rem}
+.l-sub{font-size:13px;color:var(--tx3);margin-bottom:1.75rem}
+.l-hint{margin-top:1rem;font-size:11px;color:var(--tx3);text-align:center;background:var(--g4);border:1px dashed var(--br);border-radius:8px;padding:8px 10px;line-height:1.6}
+.l-hint code{background:#fff;padding:1px 6px;border-radius:4px;border:1px solid var(--br);color:var(--g);font-size:11px}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--g);color:#fff;padding:.75rem 1.25rem;border-radius:10px;font-size:13px;z-index:999;display:none;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.toast.err{background:var(--rd)}.toast.show{display:block}
+.empty{text-align:center;padding:3rem 1rem;color:var(--tx3)}
+
+html,body{overflow-x:hidden}
+body{
+  background:
+    radial-gradient(circle at 0% 0%, rgba(34,168,90,.12), transparent 28%),
+    radial-gradient(circle at 100% 10%, rgba(24,95,165,.12), transparent 30%),
+    var(--cr);
+}
+.main,.content{min-width:0}
+.table-wrap{overflow-x:auto}
+table{min-width:920px}
+.modal{box-shadow:0 24px 56px rgba(15,31,20,.24)}
+.lcard,.stat,.table-wrap,.dc{box-shadow:0 14px 32px rgba(13,74,42,.08)}
+#app{animation:kssFadeIn .32s ease both}
+@keyframes kssFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+@media (max-width:1200px){
+  .stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dg{grid-template-columns:1fr}
+}
+
+@media (max-width:980px){
+  .shell{display:block}
+  .sidebar{
+    position:sticky;top:0;z-index:30;width:100%;
+    box-shadow:0 12px 26px rgba(15,31,20,.22)
+  }
+  .sb-logo{padding:.9rem 1rem}
+  .sb-user{padding:.75rem 1rem}
+  nav.side{
+    display:flex;gap:.45rem;overflow-x:auto;
+    padding:.5rem .75rem .8rem
+  }
+  nav.side::-webkit-scrollbar{height:5px}
+  nav.side::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,.36);border-radius:999px
+  }
+  .ni{
+    border:1px solid rgba(255,255,255,.2);
+    border-radius:999px;
+    flex:0 0 auto;
+    padding:.45rem .85rem;
+    white-space:nowrap
+  }
+  .ni svg{display:none}
+  .sb-bot{padding:.75rem 1rem}
+  .main{min-height:calc(100vh - 168px)}
+  .topbar{flex-wrap:wrap;gap:.6rem;padding:.8rem 1rem}
+  .content{padding:1rem}
+  .table-header{align-items:stretch;flex-direction:column}
+  .sbox{max-width:none}
+  .tabs-bar{overflow-x:auto;width:100%}
+  .fg,.dg{grid-template-columns:1fr}
+  .mh,.mfoot{padding:.85rem 1rem}
+  .mbody{padding:1rem}
+}
+
+@media (max-width:760px){
+  .stats-row{grid-template-columns:1fr}
+  .modal{max-height:94vh}
+  .btn{min-height:40px}
+  table{min-width:760px}
+}
+
+@media (max-width:560px){
+  .lcard{padding:1.5rem;max-width:94vw;width:100%}
+  .topbar-title{font-size:14px}
+  .topbar .btn{width:100%}
+  .table-wrap{border-radius:10px}
+  table{min-width:620px}
+  th,td{padding:.56rem .68rem;font-size:12px}
+  .modal{width:96vw !important;border-radius:14px;max-height:95vh}
+  .mh h2{font-size:15px}
+  .mfoot{flex-direction:column}
+  .mfoot .btn{width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="ls">
+  <div class="lcard">
+    <div class="l-logo">KSS</div>
+    <div class="l-sub">Employee login — Krishna Solar Solutions</div>
+    <div class="field" style="margin-bottom:.875rem">
+      <label>Phone or email</label>
+      <input type="text" id="lu" placeholder="Registered phone or email"/>
+    </div>
+    <div class="field" style="margin-bottom:1.25rem">
+      <label>Password</label>
+      <input type="password" id="lp" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:11px;font-size:14px" onclick="doLogin()" id="login-btn">Login</button>
+    <div id="lerr" style="color:var(--rd);font-size:12px;margin-top:.75rem;text-align:center;display:none"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="shell" id="app" style="display:none">
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="logo-img"><img src="assets/kss-logo.jpeg" alt="KSS"/></div>
+      <div class="logo-text">
+        <div class="brand">Krishna Solar</div>
+        <div class="sub">Employee Panel</div>
+      </div>
+    </div>
+    <div class="sb-user">
+      <div class="av" id="sbav">?</div>
+      <div><div class="u-name" id="sbname">—</div><div class="u-role" id="sbrole">Employee</div></div>
+    </div>
+    <nav class="side">
+      <button class="ni active" onclick="showPage('all',this)">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a4 4 0 00-5-5M9 20H4v-2a4 4 0 015-5m6-5a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        All Applications
+      </button>
+      <button class="ni" onclick="showPage('mine',this)">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        My Applications
+      </button>
+      <button class="ni" onclick="openAdd()">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Add Customer
+      </button>
+    </nav>
+    <div class="sb-bot"><button onclick="logout()">Logout</button></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="ptitle">All Applications</div>
+      <button class="btn btn-primary" onclick="openAdd()">+ Add Customer</button>
+    </div>
+    <div class="content">
+      <div class="stats-row">
+        <div class="stat"><div class="stat-val" id="st1">—</div><div class="stat-lbl">Total (all staff)</div></div>
+        <div class="stat"><div class="stat-val" id="st2">—</div><div class="stat-lbl">My applications</div></div>
+        <div class="stat"><div class="stat-val" id="st3">—</div><div class="stat-lbl">Completed</div></div>
+        <div class="stat"><div class="stat-val" id="st4">—</div><div class="stat-lbl">Pending</div></div>
+      </div>
+      <div class="tabs-bar">
+        <button class="tab active" onclick="ftab(this,'all')">All</button>
+        <button class="tab" onclick="ftab(this,'Applied')">Applied</button>
+        <button class="tab" onclick="ftab(this,'In Progress')">In Progress</button>
+        <button class="tab" onclick="ftab(this,'Completed')">Completed</button>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header">
+          <div class="sbox">
+            <svg width="14" height="14" fill="none" stroke="#7a9b85" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search name, phone, district..." oninput="doSearch(this.value)"/>
+          </div>
+          <span style="font-size:11px;color:var(--tx3)">🟢 Assigned to you &nbsp;⚪ Others (view only)</span>
+        </div>
+        <table>
+          <thead><tr><th>Customer</th><th>Phone</th><th>District</th><th>Service</th><th>Status</th><th>Assigned To</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="mb" id="add-modal">
+  <div class="modal">
+    <div class="mh"><h2>New Customer Application</h2><button class="mclose" onclick="closeM('add-modal')">&times;</button></div>
+    <div class="mbody">
+      <div class="fs"><div class="fst">Personal Details</div>
+        <div class="fg">
+          <div class="field"><label>Full Name *</label><input type="text" id="an" placeholder="Customer full name"/></div>
+          <div class="field"><label>Phone *</label><input type="tel" id="aph" placeholder="10-digit mobile"/></div>
+          <div class="field"><label>Email *</label><input type="email" id="aem" placeholder="Active email"/></div>
+          <div class="field"><label>Aadhaar (optional)</label><input type="text" id="aad" placeholder="12-digit Aadhaar"/></div>
+        </div>
+      </div>
+      <div class="fs"><div class="fst">Address</div>
+        <div class="fg">
+          <div class="field ff"><label>Address Line *</label><input type="text" id="aal" placeholder="House no, street, area"/></div>
+          <div class="field"><label>Village / City *</label><input type="text" id="avc" placeholder="Village or city"/></div>
+          <div class="field"><label>District *</label><input type="text" id="adi" placeholder="District name"/></div>
+          <div class="field"><label>State *</label><input type="text" id="ast" value="Odisha"/></div>
+          <div class="field"><label>Pincode *</label><input type="text" id="api" placeholder="6-digit" maxlength="6"/></div>
+        </div>
+      </div>
+      <div class="fs"><div class="fst">Service &amp; Property</div>
+        <div class="fg">
+          <div class="field"><label>Service *</label><select id="asv"><option value="">Select service...</option></select></div>
+          <div class="field"><label>Roof Type *</label>
+            <select id="arf"><option value="">Select roof type</option><option>RCC / Concrete</option><option>Tin / Sheet</option><option>Tile</option><option>Asbestos</option><option>Other</option></select>
+          </div>
+          <div class="field"><label>Monthly Bill (₹)</label><input type="text" id="abl" placeholder="e.g. 2500"/></div>
+          <div class="field"><label>Preferred Capacity</label><input type="text" id="acp" placeholder="e.g. 3kW"/></div>
+          <div class="field"><label>Preferred Date</label><input type="date" id="adt"/></div>
+          <div class="field"><label>Preferred Time</label><input type="time" id="atm"/></div>
+          <div class="field ff"><label>Notes / Message</label><textarea id="amg" placeholder="Any notes about this customer or site..."></textarea></div>
+        </div>
+      </div>
+      <div class="fs"><div class="fst">Documents Upload</div>
+        <p style="font-size:12px;color:var(--tx3);margin-bottom:.75rem">Upload all documents together — Aadhaar, electricity bill, site photos, agreement. PDF, JPG, PNG. Max 5MB each.</p>
+        <div class="fu" onclick="document.getElementById('dinp').click()">
+          <input type="file" id="dinp" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" onchange="handleFiles(this.files)"/>
+          <div style="font-size:26px;margin-bottom:.4rem">📎</div>
+          <div style="font-size:13px;color:var(--tx2);font-weight:500">Click to upload documents</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:2px">PDF, JPG, PNG — multiple files allowed</div>
+        </div>
+        <div class="flist" id="flist"></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeM('add-modal')">Cancel</button>
+      <button class="btn btn-primary" id="sbtn" onclick="saveApp()">Save Application</button>
+    </div>
+  </div>
+</div>
+
+<!-- UPDATE MODAL -->
+<div class="mb" id="upd-modal">
+  <div class="modal" style="width:480px">
+    <div class="mh"><h2 id="updtitle">Update Application</h2><button class="mclose" onclick="closeM('upd-modal')">&times;</button></div>
+    <div class="mbody">
+      <div class="field" style="margin-bottom:1rem"><label>Status</label>
+        <select id="updst">
+          <option>Applied</option><option>Contacted</option><option>Site Visit Scheduled</option>
+          <option>Site Visit Completed</option><option>Quotation Sent</option>
+          <option>Installation Started</option><option>In Progress</option><option>Completed</option>
+        </select>
+      </div>
+      <div class="field"><label>Notes / Remarks</label><textarea id="updnt" rows="4" placeholder="Update notes..."></textarea></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-outline" onclick="closeM('upd-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitUpd()">Update</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="mb" id="view-modal">
+  <div class="modal">
+    <div class="mh"><h2 id="vname">Details</h2><button class="mclose" onclick="closeM('view-modal')">&times;</button></div>
+    <div class="mbody" id="vbody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let ME=null,apps=[],svcs=[],sfiles=[],updId=null,tab='all',sq='',showMine=false,emps=[];
+
+/* ---- SESSION BOOTSTRAP (skip login if already authed via auth.html) ---- */
+function readSession(){
+  try{
+    const s=sessionStorage.getItem('kssSession')||localStorage.getItem('kssSession');
+    return s?JSON.parse(s):null;
+  }catch(e){return null;}
+}
+function clearSession(){
+  sessionStorage.removeItem('kssSession');
+  localStorage.removeItem('kssSession');
+  localStorage.removeItem('kssBootstrap');
+}
+async function bootFromSession(){
+  const s=readSession();
+  if(!s||s.role!=='employee'){window.location.replace('staff-login.html');return;}
+  ME=s;
+  try{
+    const r=await fetch('/api/bootstrap');
+    if(!r.ok)throw new Error('bootstrap failed');
+    const data=await r.json();
+    apps=data.applications||[];
+    svcs=(data.services||[]).filter(s=>s.active);
+    emps=(data.users||[]).filter(x=>x.role==='employee');
+  }catch(e){
+    try{
+      const cached=JSON.parse(localStorage.getItem('kssBootstrap')||'{}');
+      apps=cached.applications||[];
+      svcs=(cached.services||[]).filter(s=>s.active);
+      emps=(cached.users||[]).filter(x=>x.role==='employee');
+    }catch(_){}
+  }
+  fillSvcs();renderUI();
+  document.getElementById('ls').style.display='none';
+  document.getElementById('app').style.display='flex';
+}
+window.addEventListener('DOMContentLoaded',bootFromSession);
+
+async function doLogin(){
+  const u=document.getElementById('lu').value.trim(),p=document.getElementById('lp').value;
+  const e=document.getElementById('lerr'); e.style.display='none';
+  if(!u||!p){e.textContent='Enter phone/email and password.';e.style.display='block';return;}
+  const btn=document.getElementById('login-btn'); btn.textContent='Logging in...'; btn.disabled=true;
+  try{
+    const r=await api('/api/login',{role:'employee',username:u,password:p});
+    ME=r.user; apps=r.applications||[]; svcs=(r.services||[]).filter(s=>s.active);
+    emps=(r.users||[]).filter(x=>x.role==='employee');
+    try{sessionStorage.setItem('kssSession',JSON.stringify(ME));localStorage.setItem('kssSession',JSON.stringify(ME));localStorage.setItem('kssBootstrap',JSON.stringify(r));}catch(_){}
+    fillSvcs(); renderUI();
+    document.getElementById('ls').style.display='none';
+    document.getElementById('app').style.display='flex';
+  }catch(ex){e.textContent=ex.message||'Login failed.';e.style.display='block';}
+  finally{btn.textContent='Login';btn.disabled=false;}
+}
+function logout(){
+  try{sessionStorage.removeItem('kssSession');localStorage.removeItem('kssSession');localStorage.removeItem('kssBootstrap');}catch(_){}
+  window.location.href='staff-login.html';
+}
+
+function renderUI(){
+  const ini=(ME.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('sbav').textContent=ini;
+  document.getElementById('sbname').textContent=ME.name;
+  document.getElementById('sbrole').textContent=ME.jobTitle||'Employee';
+  updStats(); renderTable();
+}
+function updStats(){
+  const mine=apps.filter(a=>a.assignedTo===ME.phone);
+  document.getElementById('st1').textContent=apps.length;
+  document.getElementById('st2').textContent=mine.length;
+  document.getElementById('st3').textContent=mine.filter(a=>a.status==='Completed').length;
+  document.getElementById('st4').textContent=mine.filter(a=>a.status!=='Completed'&&a.status!=='Cancelled').length;
+}
+function empName(phone){if(!phone)return 'Unassigned';const e=emps.find(x=>x.phone===phone);return e?e.name:phone;}
+function getFiltered(){
+  let d=showMine?apps.filter(a=>a.assignedTo===ME.phone):apps;
+  if(tab!=='all')d=d.filter(a=>a.status===tab);
+  if(sq){const q=sq.toLowerCase();d=d.filter(a=>a.name.toLowerCase().includes(q)||a.phone.includes(q)||(a.district||'').toLowerCase().includes(q));}
+  return d;
+}
+function renderTable(){
+  const d=getFiltered(),tb=document.getElementById('tbody');
+  if(!d.length){tb.innerHTML='<tr><td colspan="8"><div class="empty">No applications found</div></td></tr>';return;}
+  tb.innerHTML=d.map(a=>{
+    const isMe=a.assignedTo===ME.phone;
+    const sc=sbadge(a.status);
+    return `<tr class="${isMe?'own':''}">
+      <td><div style="font-weight:500">${isMe?'🟢 ':'⚪ '}${x(a.name)}</div><div style="font-size:11px;color:var(--tx3)">${x(a.email)}</div></td>
+      <td>${x(a.phone)}</td><td>${x(a.district)}</td>
+      <td style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${x(a.service)}</td>
+      <td><span class="badge ${sc}">${x(a.status)}</span></td>
+      <td><span style="font-size:12px">${x(empName(a.assignedTo))}</span>${isMe?'<span style="font-size:10px;color:var(--g);margin-left:4px;font-weight:500">(you)</span>':''}</td>
+      <td style="font-size:12px">${x(a.createdAt||'').split(',')[0]||'—'}</td>
+      <td><div style="display:flex;gap:5px">
+        <button class="btn btn-outline btn-sm" onclick="viewApp('${a.id}')">View</button>
+        ${isMe?`<button class="btn btn-outline btn-sm" onclick="openUpd('${a.id}')">Update</button>`:''}
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function sbadge(s){const m={Applied:'bg-gray',Contacted:'bg-blue','Site Visit Scheduled':'bg-blue','Site Visit Completed':'bg-blue','Quotation Sent':'bg-amber','Installation Started':'bg-amber','In Progress':'bg-amber',Completed:'bg-green',Cancelled:'bg-red'};return m[s]||'bg-gray';}
+function doSearch(q){sq=q;renderTable();}
+function ftab(el,t){document.querySelectorAll('.tabs-bar .tab').forEach(b=>b.classList.remove('active'));el.classList.add('active');tab=t;renderTable();}
+function showPage(pg,btn){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));btn.classList.add('active');showMine=pg==='mine';document.getElementById('ptitle').textContent=pg==='mine'?'My Applications':'All Applications';renderTable();}
+
+function fillSvcs(){const s=document.getElementById('asv');s.innerHTML='<option value="">Select service...</option>'+svcs.map(sv=>`<option value="${x(sv.title)}">${x(sv.title)}</option>`).join('');}
+function openAdd(){
+  sfiles=[];
+  ['an','aph','aem','aad','aal','avc','adi','abl','acp','amg'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('ast').value='Odisha';
+  document.getElementById('api').value='';
+  document.getElementById('asv').value='';document.getElementById('arf').value='';
+  document.getElementById('adt').value='';document.getElementById('atm').value='';
+  renderFL();document.getElementById('add-modal').classList.add('open');
+}
+async function saveApp(){
+  const n=v('an'),ph=v('aph'),em=v('aem'),al=v('aal'),vc=v('avc'),di=v('adi'),st=v('ast'),pi=v('api'),rf=v('arf'),sv=v('asv');
+  if(!n||!ph||!em||!al||!vc||!di||!st||!pi||!rf||!sv){toast('Fill all required (*) fields',true);return;}
+  const btn=document.getElementById('sbtn');btn.textContent='Saving...';btn.disabled=true;
+  try{
+    const docs={};
+    for(let i=0;i<sfiles.length;i++){const f=sfiles[i];docs[`doc_${i}`]={name:f.name,data:await rb64(f)};}
+    const res=await api('/api/applications',{name:n,phone:ph,email:em,addressLine:al,villageCity:vc,district:di,state:st,pincode:pi,roofType:rf,service:sv,monthlyBill:v('abl'),capacity:v('acp'),preferredDate:v('adt'),preferredTime:v('atm'),message:v('amg'),assignedTo:ME.phone,documents:docs});
+    apps=res.applications||apps;updStats();renderTable();closeM('add-modal');toast('Application saved!');
+  }catch(e){toast(e.message||'Save failed.',true);}
+  finally{btn.textContent='Save Application';btn.disabled=false;}
+}
+function openUpd(id){
+  const a=apps.find(x=>x.id===id);if(!a)return;
+  updId=id;document.getElementById('updtitle').textContent='Update – '+a.name;
+  document.getElementById('updst').value=a.status;document.getElementById('updnt').value=a.notes||'';
+  document.getElementById('upd-modal').classList.add('open');
+}
+async function submitUpd(){
+  try{
+    const res=await api('/api/applications/update',{id:updId,status:document.getElementById('updst').value,notes:document.getElementById('updnt').value,assignedTo:ME.phone});
+    apps=res.applications||apps;updStats();renderTable();closeM('upd-modal');toast('Updated!');
+  }catch(e){toast(e.message||'Update failed.',true);}
+}
+function viewApp(id){
+  const a=apps.find(z=>z.id===id);if(!a)return;
+  document.getElementById('vname').textContent=a.name;
+  const docs=a.documents||{};
+  const dhtml=Object.values(docs).map(d=>`<div class="doc-item">📄 ${x(d.name||'document')} <a style="margin-left:auto;color:var(--bl);font-size:11px;font-weight:500" href="${x(d.url||'#')}" target="_blank">Download</a></div>`).join('')||'<div style="color:var(--tx3);font-size:13px">No documents uploaded</div>';
+  document.getElementById('vbody').innerHTML=`<div class="dg">
+    <div class="dc"><div class="dct">Personal</div>${dr('Name',x(a.name))}${dr('Phone',x(a.phone))}${dr('Email',x(a.email))}${dr('Address',x(a.address||'—'))}</div>
+    <div class="dc"><div class="dct">Service</div>${dr('Service',x(a.service))}${dr('Roof Type',x(a.roofType||'—'))}${dr('Monthly Bill',a.monthlyBill?'₹'+x(a.monthlyBill):'—')}${dr('Capacity',x(a.capacity||'—'))}${dr('Preferred Date',x(a.preferredDate||'—'))}${dr('Preferred Time',x(a.preferredTime||'—'))}</div>
+    <div class="dc"><div class="dct">Status</div>${dr('Status','<span class="badge '+sbadge(a.status)+'">'+x(a.status)+'</span>')}${dr('Assigned To',x(empName(a.assignedTo)))}${dr('Notes',x(a.notes||'—'))}${dr('Applied',x(a.createdAt||'—'))}${dr('Updated',x(a.updatedAt||'—'))}</div>
+    <div class="dc"><div class="dct">Documents</div>${dhtml}</div>
+  </div>`;
+  document.getElementById('view-modal').classList.add('open');
+}
+function dr(l,val){return `<div class="dr"><span class="dl">${x(l)}</span><span class="dv">${val}</span></div>`;}
+function handleFiles(files){Array.from(files).forEach(f=>sfiles.push(f));renderFL();document.getElementById('dinp').value='';}
+function renderFL(){document.getElementById('flist').innerHTML=sfiles.map((f,i)=>`<div class="fitem">📎 <span class="fitem-nm">${x(f.name)}</span> <span style="color:var(--tx3);font-size:11px">(${(f.size/1024).toFixed(0)}KB)</span><button class="fitem-rm" onclick="sfiles.splice(${i},1);renderFL()">&times;</button></div>`).join('');}
+function rb64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(new Error('Read failed'));r.readAsDataURL(file);});}
+function closeM(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.mb').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
+function x(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function v(id){return document.getElementById(id).value.trim();}
+function toast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(err?' err':'');setTimeout(()=>t.className='toast',3000);}
+async function api(url,data){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const j=await r.json();if(!r.ok)throw new Error(j.message||'Request failed');return j;}
+</script>
+</body>
+</html>
