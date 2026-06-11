@@ -21,7 +21,7 @@ load_dotenv()
 ROOT = Path(__file__).resolve().parent
 UPLOAD_DIR = ROOT / "uploads"
 PORT = int(os.environ.get("PORT", "3000"))
-ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "satabdeepersonal@gmail.com")
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "krishnamoharana011@gmail.com")
 NOTIFICATION_EMAIL = os.environ.get("NOTIFICATION_EMAIL", ADMIN_EMAIL)
 DB_READY = True
 DB_ERROR = ""
@@ -65,11 +65,17 @@ def database_is_configured():
 def allowed_frontend_origin(origin):
     if not origin:
         return ""
-    configured = {
-        value.strip().rstrip("/")
-        for value in env_first("FRONTEND_URLS", "FRONTEND_URL").split(",")
-        if value.strip()
-    }
+    configured = set()
+    for value in env_first("FRONTEND_URLS", "FRONTEND_URL").split(","):
+        value = value.strip().rstrip("/")
+        if not value:
+            continue
+        configured.add(value)
+        parsed_value = urllib.parse.urlparse(value)
+        if parsed_value.scheme in {"http", "https"} and parsed_value.hostname:
+            hostname = parsed_value.hostname
+            twin_host = hostname[4:] if hostname.startswith("www.") else f"www.{hostname}"
+            configured.add(urllib.parse.urlunparse(parsed_value._replace(netloc=twin_host)))
     local_origins = {"http://localhost:5173", "http://127.0.0.1:5173"}
     if origin.rstrip("/") in configured | local_origins:
         return origin

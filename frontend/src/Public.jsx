@@ -116,6 +116,7 @@ export function HomePage() {
         <img src="/assets/renewable-energy.png" alt="Renewable energy" />
       </section>
 
+      <Reviews />
       <Calculator />
       <Contact />
     </main>
@@ -137,6 +138,74 @@ function ContentPreview({ title, eyebrow, items, type }) {
         ))}
       </div>
       <Link href={`/${type}`} className="button secondary">View all {type}</Link>
+    </section>
+  );
+}
+
+function Reviews() {
+  const reviews = [
+    ["★★★★★", "Good installation support", "Team explained the solar process clearly and updated every stage on time.", "Home customer"],
+    ["★★★★★", "Helpful for documents", "KSS helped with electricity bill, roof photo, and other required documents smoothly.", "Residential client"],
+    ["★★★★★", "Quick response", "Calls and WhatsApp updates were fast, and the team handled the site visit professionally.", "Solar applicant"],
+    ["★★★★☆", "Clean work progress", "The work status tracking made it easy to know what was pending and what was completed.", "KSS customer"],
+  ];
+  const featureReviews = [
+    ["HC", "Good installation support", "Home installation", "Team explained the solar process clearly and updated every stage on time."],
+    ["RC", "Helpful for documents", "Residential client", "KSS helped with electricity bill, roof photo, and other required documents smoothly."],
+    ["SA", "Quick response", "Solar applicant", "Calls and WhatsApp updates were fast, and the site visit was handled professionally."],
+    ["KC", "Clean work progress", "Commercial project", "The work status tracking made it easy to know what was pending and completed."],
+  ];
+  return (
+    <section className="section band reviews-section" id="reviews">
+      <div className="reviews-heading">
+        <div>
+          <p className="eyebrow">Customer Reviews</p>
+          <h2>What customers say about KSS</h2>
+          <p>Real feedback from homeowners, businesses, and solar applicants.</p>
+        </div>
+        <a className="button secondary" href="https://share.google/neok5yBa11cMHkvuz" target="_blank" rel="noreferrer">View on Google Maps</a>
+      </div>
+
+      <div className="rating-summary">
+        <div className="rating-score">
+          <strong>4.8</strong>
+          <span>★★★★★</span>
+          <small>Overall rating</small>
+        </div>
+        <div className="rating-bars">
+          {[["5★", 42], ["4★", 18], ["3★", 5], ["2★", 2], ["1★", 1]].map(([label, value]) => (
+            <div key={label}><span>{label}</span><meter min="0" max="68" value={value} /><small>{value}</small></div>
+          ))}
+        </div>
+        <div className="rating-badges">
+          <span>68 verified reviews</span>
+          <span>Google verified</span>
+          <span>Top-rated installer</span>
+        </div>
+      </div>
+
+      <div className="review-feature-grid">
+        {featureReviews.map(([initials, title, subtitle, text]) => (
+          <article key={title}>
+            <span>{initials}</span>
+            <div><strong>{title}</strong><small>{subtitle}</small></div>
+            <p>{text}</p>
+          </article>
+        ))}
+      </div>
+
+      <div className="reviews-marquee" aria-label="Sliding customer reviews">
+        <div className="reviews-track">
+          {[...reviews, ...reviews].map(([stars, title, text, name], index) => (
+            <article className="review-card" key={`${title}-${index}`}>
+              <strong>{stars}</strong>
+              <h3>{title}</h3>
+              <p>{text}</p>
+              <span>- {name}</span>
+            </article>
+          ))}
+        </div>
+      </div>
     </section>
   );
 }
