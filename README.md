@@ -139,20 +139,63 @@ MAIL_SSL_TLS=False
 GEMINI_API_KEY=...
 GEMINI_MODEL=gemini-2.5-flash
 UPLOAD_DIR=/data/uploads
+FRONTEND_URLS=https://your-project.vercel.app
+ALLOW_VERCEL_ORIGINS=true
 ```
 
 If you keep document uploads on Railway, attach a Volume and mount it to `/data`.
 
+Railway health checks use `/api/health`, which confirms the backend process is alive without failing if Supabase is slow to wake. Supabase keepalive uses `/api/keepalive`, which runs a real `SELECT 1` against the database.
+
+## Vercel React Frontend
+
+The React frontend builds from `frontend/` and deploys from the repository root using `vercel.json`.
+
+Add this environment variable in Vercel:
+
+```text
+VITE_API_BASE_URL=https://your-railway-backend.up.railway.app
+```
+
+Add the Vercel production URL to Railway:
+
+```text
+FRONTEND_URLS=https://your-project.vercel.app
+```
+
+For Vercel preview deployments, keep `ALLOW_VERCEL_ORIGINS=true`.
+
+## Supabase Keepalive
+
+This repo includes `.github/workflows/supabase-keepalive.yml`, scheduled twice per day at `03:00` and `15:00` UTC. It calls:
+
+```text
+https://your-railway-backend.up.railway.app/api/keepalive
+```
+
+In GitHub, add this repository secret:
+
+```text
+RAILWAY_BACKEND_URL=https://your-railway-backend.up.railway.app
+```
+
+You can also run it manually:
+
+```powershell
+$env:BACKEND_URL="https://your-railway-backend.up.railway.app"
+npm run keepalive
+```
+
 ## Hosting + Domain
 
-Recommended: host this as one backend service (Python) because it already serves both API and frontend HTML/CSS/JS.
+Use the split deployment:
 
-1. Deploy `server.py` project to one host (Render, Railway, VPS, etc.).
-2. Start command: `python server.py`
-3. Add all `.env` values in the host dashboard.
-4. Attach your domain (for example `app.yourdomain.com`) to that single service.
-5. Point DNS `A`/`CNAME` records to the hosting provider target.
-6. Keep `HOST=0.0.0.0` and set `PORT` from provider environment if required.
+1. Deploy the React frontend to Vercel from the repository root.
+2. Keep `server.py`, Supabase, SMTP, Gemini, and uploads on Railway.
+3. Set `VITE_API_BASE_URL` in Vercel to the Railway public backend URL.
+4. Set `FRONTEND_URLS` in Railway to the Vercel production/custom-domain URL.
+5. Point the public website domain to Vercel.
+6. Keep `HOST=0.0.0.0` on Railway and use Railway's provided `PORT`.
 
 You can also split frontend/backend, but then:
 

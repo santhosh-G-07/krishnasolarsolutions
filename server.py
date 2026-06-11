@@ -31,6 +31,7 @@ PIN_RE = re.compile(r"^\d{6}$")
 EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 
 STATUS_FLOW = [
+    "Documents Received",
     "Applied",
     "Contacted",
     "Site Visit Scheduled",
@@ -59,6 +60,25 @@ def env_bool(key, default=False):
 
 def database_is_configured():
     return any(env_first(key) for key in DB_CONFIG_KEYS)
+
+
+def allowed_frontend_origin(origin):
+    if not origin:
+        return ""
+    configured = {
+        value.strip().rstrip("/")
+        for value in env_first("FRONTEND_URLS", "FRONTEND_URL").split(",")
+        if value.strip()
+    }
+    local_origins = {"http://localhost:5173", "http://127.0.0.1:5173"}
+    if origin.rstrip("/") in configured | local_origins:
+        return origin
+    parsed = urllib.parse.urlparse(origin)
+    if parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1"}:
+        return origin
+    if env_bool("ALLOW_VERCEL_ORIGINS", default=True) and parsed.scheme == "https" and parsed.hostname and parsed.hostname.endswith(".vercel.app"):
+        return origin
+    return ""
 
 
 def database_target():
@@ -451,8 +471,9 @@ def public_application(app):
     return data
 
 
-def bootstrap():
-    conn = connect()
+def bootstrap(conn=None):
+    owns_connection = conn is None
+    conn = conn or connect()
     try:
         cur = conn.cursor()
         cur.execute("SELECT * FROM users ORDER BY created_at DESC")
@@ -471,7 +492,8 @@ def bootstrap():
         bs_row = row_dict(cur)
         cur.close()
     finally:
-        conn.close()
+        if owns_connection:
+            conn.close()
     customers = [public_user(u) for u in users if u["role"] == "customer"]
     return {
         "users": [public_user(u) for u in users if u["role"] != "customer"],
@@ -510,6 +532,19 @@ def offline_bootstrap():
         "databaseOffline": True,
         "message": DB_ERROR or "Database is not configured.",
     }
+
+
+def database_keepalive():
+    conn = connect()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT 1 AS ok")
+        row = row_dict(cur)
+        cur.close()
+        conn.commit()
+        return bool(row and row.get("ok") == 1)
+    finally:
+        conn.close()
 
 
 def validate_customer_payload(data, require_password=True):
@@ -571,6 +606,104 @@ def send_application_email(application):
             f"Capacity: {application.get('capacity') or 'Not added'}",
             f"Preferred visit: {application.get('preferred_date') or 'Not added'} {application.get('preferred_time') or ''}".strip(),
             f"Message: {application.get('message') or 'Not added'}",
+        ])
+    )
+    return send_smtp_message(message)
+
+
+def send_assignment_email(application, employee):
+    if not employee or not employee.get("email"):
+        return False, "Assigned employee does not have an email address."
+    mail_config = smtp_settings()
+    if not mail_config["user"] or not mail_config["pass"]:
+        return False, "Mail is not configured."
+    message = EmailMessage()
+    message["From"] = mail_config["from"] or mail_config["user"]
+    message["To"] = employee["email"]
+    message["Subject"] = f"KSS work assigned - {application['name']} - {application['service']}"
+    message.set_content(
+        "\n".join([
+            f"Hello {employee['name']},",
+            "",
+            "A customer application has been assigned to you.",
+            "",
+            f"Application ID: {application['id']}",
+            f"Customer: {application['name']}",
+            f"Phone: {application['phone']}",
+            f"Email: {application['email']}",
+            f"Service: {application['service']}",
+            f"Address: {application['address_line']}, {application['village_city']}, {application['district']}, {application['state']} - {application['pincode']}",
+            f"Roof type: {application.get('roof_type') or 'Not added'}",
+            f"Monthly bill: {application.get('monthly_bill') or 'Not added'}",
+            f"Capacity: {application.get('capacity') or 'Not added'}",
+            f"Preferred visit: {application.get('preferred_date') or 'Not added'} {application.get('preferred_time') or ''}".strip(),
+            f"Customer message: {application.get('message') or 'Not added'}",
+            "",
+            "Open the KSS employee dashboard to review and update this customer.",
+        ])
+    )
+    return send_smtp_message(message)
+
+
+APPLICATION_AUDIT_FIELDS = [
+    ("name", "Customer name"),
+    ("phone", "Phone"),
+    ("email", "Email"),
+    ("address_line", "Address line"),
+    ("village_city", "Village / city"),
+    ("district", "District"),
+    ("state", "State"),
+    ("pincode", "Pincode"),
+    ("roof_type", "Roof type"),
+    ("service", "Service"),
+    ("monthly_bill", "Monthly bill"),
+    ("capacity", "Capacity"),
+    ("preferred_date", "Preferred date"),
+    ("preferred_time", "Preferred time"),
+    ("message", "Customer message"),
+    ("status", "Status"),
+    ("assigned_to", "Assigned employee"),
+    ("notes", "Work notes"),
+]
+
+
+def application_change_summary(current, updated):
+    changes = []
+    for key, label in APPLICATION_AUDIT_FIELDS:
+        before = str(current.get(key) or "").strip()
+        after = str(updated.get(key) or "").strip()
+        if before != after:
+            changes.append({"field": key, "label": label, "before": before or "Not added", "after": after or "Not added"})
+    return changes
+
+
+def format_change_summary(changes):
+    return "\n".join(f"- {change['label']}: {change['before']} -> {change['after']}" for change in changes)
+
+
+def send_employee_update_email(application, employee, changes):
+    if not changes:
+        return False, "No changes to notify."
+    mail_config = smtp_settings()
+    if not mail_config["user"] or not mail_config["pass"]:
+        return False, "Mail is not configured."
+    message = EmailMessage()
+    message["From"] = mail_config["from"] or mail_config["user"]
+    message["To"] = ADMIN_EMAIL
+    message["Subject"] = f"KSS employee update - {application['name']} - {employee['name']}"
+    message.set_content(
+        "\n".join([
+            "An employee updated an assigned customer application.",
+            "",
+            f"Employee: {employee['name']} ({employee['phone']})",
+            f"Customer: {application['name']} ({application['phone']})",
+            f"Application ID: {application['id']}",
+            f"Service: {application['service']}",
+            "",
+            "Changes:",
+            format_change_summary(changes),
+            "",
+            "Open the KSS admin dashboard to review the latest customer details.",
         ])
     )
     return send_smtp_message(message)
@@ -934,6 +1067,19 @@ class KssHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(payload)
 
+    def end_headers(self):
+        origin = allowed_frontend_origin(self.headers.get("Origin", ""))
+        if origin:
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+            self.send_header("Access-Control-Allow-Headers", "Content-Type")
+            self.send_header("Vary", "Origin")
+        super().end_headers()
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.end_headers()
+
     def read_json(self):
         length = int(self.headers.get("Content-Length", "0"))
         if not length:
@@ -941,9 +1087,41 @@ class KssHandler(SimpleHTTPRequestHandler):
         return json.loads(self.rfile.read(length).decode("utf-8"))
 
     def do_GET(self):
+        global DB_READY, DB_ERROR
         parsed_path = urllib.parse.urlparse(self.path).path
+        if parsed_path == "/api/health":
+            self.json_response(200, {
+                "ok": True,
+                "service": "kss-backend",
+                "databaseConfigured": database_is_configured(),
+                "databaseReady": DB_READY,
+            })
+            return
+        if parsed_path == "/api/keepalive":
+            try:
+                if not database_is_configured():
+                    self.json_response(503, {"ok": False, "message": "Database is not configured."})
+                    return
+                ok = database_keepalive()
+                DB_READY = True
+                DB_ERROR = ""
+                self.json_response(200, {"ok": ok, "message": "Database keepalive successful."})
+            except psycopg2.OperationalError as error:
+                DB_READY = False
+                DB_ERROR = str(error).strip()
+                self.json_response(503, {
+                    "ok": False,
+                    "message": "Database keepalive failed. It may be waking up; the scheduler will retry.",
+                    "detail": DB_ERROR,
+                })
+            return
         if parsed_path == "/api/bootstrap":
-            self.json_response(200, bootstrap() if DB_READY else offline_bootstrap())
+            try:
+                self.json_response(200, bootstrap() if DB_READY else offline_bootstrap())
+            except psycopg2.OperationalError:
+                self.json_response(503, {
+                    "message": "Database is temporarily unavailable. Please wait a moment and try again.",
+                })
             return
         shell_page = self.route_shell_page()
         if shell_page:
@@ -957,6 +1135,10 @@ class KssHandler(SimpleHTTPRequestHandler):
             self.handle_api_post()
         except ValueError as error:
             self.json_response(400, {"message": str(error)})
+        except psycopg2.OperationalError:
+            self.json_response(503, {
+                "message": "Database is temporarily unavailable. Please wait a moment and try again.",
+            })
         except Exception as error:
             self.json_response(500, {"message": str(error)})
 
@@ -1026,13 +1208,14 @@ class KssHandler(SimpleHTTPRequestHandler):
                 cur.execute("SELECT * FROM users WHERE id = %s", (user["id"],))
                 user = row_dict(cur)
                 conn.commit()
+                login_bootstrap = bootstrap(conn)
                 cur.close()
             except Exception as e:
                 conn.rollback()
                 raise e
             finally:
                 conn.close()
-            self.json_response(200, {"user": public_user(user), **bootstrap()})
+            self.json_response(200, {"user": public_user(user), **login_bootstrap})
             return
 
         # ===================== ADMIN PROFILE =====================
@@ -1419,8 +1602,8 @@ class KssHandler(SimpleHTTPRequestHandler):
             if len(name) < 2 or not PHONE_RE.match(phone) or len(password) < 6:
                 self.json_response(400, {"message": "Employee needs a name, valid 10 digit phone, and 6 character password."})
                 return
-            if email and not EMAIL_RE.match(email):
-                self.json_response(400, {"message": "Enter a valid employee email."})
+            if not EMAIL_RE.match(email):
+                self.json_response(400, {"message": "A valid employee email is required for assignment notifications."})
                 return
             conn = connect()
             try:
@@ -1457,8 +1640,8 @@ class KssHandler(SimpleHTTPRequestHandler):
             if len(name) < 2 or not PHONE_RE.match(phone):
                 self.json_response(400, {"message": "Employee needs a name and valid 10 digit phone."})
                 return
-            if email and not EMAIL_RE.match(email):
-                self.json_response(400, {"message": "Enter a valid employee email."})
+            if not EMAIL_RE.match(email):
+                self.json_response(400, {"message": "A valid employee email is required for assignment notifications."})
                 return
             conn = connect()
             try:
@@ -1674,7 +1857,7 @@ class KssHandler(SimpleHTTPRequestHandler):
                 "preferred_date": str(body.get("preferredDate", "")).strip(),
                 "preferred_time": str(body.get("preferredTime", "")).strip(),
                 "message": str(body.get("message", "")).strip(),
-                "status": "Applied",
+                "status": "Documents Received",
                 "assigned_to": str(body.get("assignedTo", "")).strip(),
                 "notes": "New verified application received.",
                 "documents": json.dumps(documents),
@@ -1714,6 +1897,24 @@ class KssHandler(SimpleHTTPRequestHandler):
                         1 if sent_online else 0, email_status, now(),
                     ),
                 )
+                assigned_employee = None
+                if application["assigned_to"]:
+                    cur.execute(
+                        "SELECT * FROM users WHERE role = 'employee' AND active = 1 AND phone = %s",
+                        (application["assigned_to"],),
+                    )
+                    assigned_employee = row_dict(cur)
+                if assigned_employee:
+                    assigned_sent, assigned_status = send_assignment_email(application, assigned_employee)
+                    cur.execute(
+                        "INSERT INTO notifications VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                        (
+                            make_id("ASSIGN"), app_id, assigned_employee["email"],
+                            f"Application assigned - {application['name']}",
+                            f"{application['name']} ({application['phone']}) was assigned to {assigned_employee['name']}.",
+                            1 if assigned_sent else 0, assigned_status, now(),
+                        ),
+                    )
                 conn.commit()
                 cur.close()
             except Exception as e:
@@ -1726,6 +1927,8 @@ class KssHandler(SimpleHTTPRequestHandler):
 
         if self.path == "/api/applications/update":
             app_id = body.get("id")
+            updated_by_role = str(body.get("updatedByRole", "")).strip().lower()
+            updated_by_phone = str(body.get("updatedByPhone", "")).strip()
             conn = connect()
             try:
                 cur = conn.cursor()
@@ -1741,14 +1944,135 @@ class KssHandler(SimpleHTTPRequestHandler):
                 if status not in STATUS_FLOW and status != "Cancelled":
                     self.json_response(400, {"message": "Invalid status."})
                     return
+                employee_actor = None
+                if updated_by_role == "employee":
+                    cur.execute(
+                        "SELECT * FROM users WHERE role = 'employee' AND active = 1 AND phone = %s",
+                        (updated_by_phone,),
+                    )
+                    employee_actor = row_dict(cur)
+                    if not employee_actor or (current["assigned_to"] or "") != updated_by_phone:
+                        self.json_response(403, {"message": "Employees can update only customers assigned to them."})
+                        return
+                updated_values = {
+                    "name": str(body.get("name", current["name"])).strip(),
+                    "phone": str(body.get("phone", current["phone"])).strip(),
+                    "email": str(body.get("email", current["email"])).strip().lower(),
+                    "address_line": str(body.get("addressLine", current["address_line"])).strip(),
+                    "village_city": str(body.get("villageCity", current["village_city"])).strip(),
+                    "district": str(body.get("district", current["district"])).strip(),
+                    "state": str(body.get("state", current["state"])).strip(),
+                    "pincode": str(body.get("pincode", current["pincode"])).strip(),
+                    "roof_type": str(body.get("roofType", current["roof_type"])).strip(),
+                    "service": str(body.get("service", current["service"])).strip(),
+                    "monthly_bill": str(body.get("monthlyBill", current["monthly_bill"] or "")).strip(),
+                    "capacity": str(body.get("capacity", current["capacity"] or "")).strip(),
+                    "preferred_date": str(body.get("preferredDate", current["preferred_date"] or "")).strip(),
+                    "preferred_time": str(body.get("preferredTime", current["preferred_time"] or "")).strip(),
+                    "message": str(body.get("message", current["message"] or "")).strip(),
+                    "assigned_to": str(body.get("assignedTo", current["assigned_to"] or "")).strip(),
+                    "notes": str(body.get("notes", current["notes"] or "")).strip(),
+                }
+                if employee_actor:
+                    updated_values["assigned_to"] = current["assigned_to"] or ""
+                if len(updated_values["name"]) < 2 or not PHONE_RE.match(updated_values["phone"]) or not EMAIL_RE.match(updated_values["email"]):
+                    self.json_response(400, {"message": "Customer needs a valid name, phone, and email."})
+                    return
+                if not PIN_RE.match(updated_values["pincode"]):
+                    self.json_response(400, {"message": "Pincode must be exactly 6 digits."})
+                    return
+                assignment_changed = updated_values["assigned_to"] and updated_values["assigned_to"] != (current["assigned_to"] or "")
+                audit_values = {**dict(current), **updated_values, "status": status}
+                employee_changes = application_change_summary(current, audit_values) if employee_actor else []
+                assigned_employee = None
+                if assignment_changed:
+                    cur.execute(
+                        "SELECT * FROM users WHERE role = 'employee' AND active = 1 AND phone = %s",
+                        (updated_values["assigned_to"],),
+                    )
+                    assigned_employee = row_dict(cur)
+                    if not assigned_employee or not assigned_employee.get("email"):
+                        self.json_response(400, {"message": "Add a valid email to this employee before assigning customer work."})
+                        return
                 cur.execute(
-                    "UPDATE applications SET status = %s, assigned_to = %s, notes = %s, updated_at = %s WHERE id = %s",
+                    """
+                    UPDATE applications SET
+                        name = %s, phone = %s, email = %s, address_line = %s, village_city = %s,
+                        district = %s, state = %s, pincode = %s, roof_type = %s, service = %s,
+                        monthly_bill = %s, capacity = %s, preferred_date = %s, preferred_time = %s,
+                        message = %s, status = %s, assigned_to = %s, notes = %s, updated_at = %s
+                    WHERE id = %s
+                    """,
                     (
-                        status,
-                        str(body.get("assignedTo", current["assigned_to"] or "")).strip(),
-                        str(body.get("notes", current["notes"] or "")).strip(),
-                        now(),
-                        app_id,
+                        updated_values["name"], updated_values["phone"], updated_values["email"],
+                        updated_values["address_line"], updated_values["village_city"], updated_values["district"],
+                        updated_values["state"], updated_values["pincode"], updated_values["roof_type"],
+                        updated_values["service"], updated_values["monthly_bill"], updated_values["capacity"],
+                        updated_values["preferred_date"], updated_values["preferred_time"], updated_values["message"],
+                        status, updated_values["assigned_to"], updated_values["notes"], now(), app_id,
+                    ),
+                )
+                if assignment_changed:
+                    assignment_application = {**dict(current), **updated_values, "status": status}
+                    assigned_sent, assigned_status = send_assignment_email(assignment_application, assigned_employee)
+                    cur.execute(
+                        "INSERT INTO notifications VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                        (
+                            make_id("ASSIGN"), app_id, assigned_employee["email"],
+                            f"Application assigned - {updated_values['name']}",
+                            f"{updated_values['name']} ({updated_values['phone']}) was assigned to {assigned_employee['name']}.",
+                            1 if assigned_sent else 0, assigned_status, now(),
+                        ),
+                    )
+                if employee_actor and employee_changes:
+                    employee_sent, employee_status = send_employee_update_email(audit_values, employee_actor, employee_changes)
+                    summary = format_change_summary(employee_changes)
+                    cur.execute(
+                        "INSERT INTO notifications VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                        (
+                            make_id("EMPUPDATE"), app_id, ADMIN_EMAIL,
+                            f"{employee_actor['name']} updated {updated_values['name']}",
+                            f"Employee {employee_actor['name']} updated customer {updated_values['name']}:\n{summary}",
+                            1 if employee_sent else 0, employee_status, now(),
+                        ),
+                    )
+                conn.commit()
+                cur.close()
+            except Exception as e:
+                conn.rollback()
+                raise e
+            finally:
+                conn.close()
+            self.json_response(200, bootstrap())
+            return
+
+        if self.path == "/api/applications/delete":
+            app_id = str(body.get("id", "")).strip()
+            admin_phone = str(body.get("admin_phone", "")).strip()
+            if not app_id:
+                self.json_response(400, {"message": "Application id is required."})
+                return
+            conn = connect()
+            try:
+                cur = conn.cursor()
+                admin = require_admin(cur, {"admin_phone": admin_phone})
+                if not admin:
+                    self.json_response(401, {"message": "Admin not authorised."})
+                    return
+                cur.execute("SELECT * FROM applications WHERE id = %s", (app_id,))
+                application = row_dict(cur)
+                if not application:
+                    self.json_response(404, {"message": "Customer application not found."})
+                    return
+                cur.execute("DELETE FROM notifications WHERE application_id = %s", (app_id,))
+                cur.execute("DELETE FROM applications WHERE id = %s", (app_id,))
+                cur.execute(
+                    "INSERT INTO notifications VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                    (
+                        make_id("DELETE"), "", ADMIN_EMAIL,
+                        f"Customer deleted - {application['name']}",
+                        f"Admin {admin['name']} deleted application {app_id} for {application['name']} ({application['phone']}).",
+                        1, "deleted", now(),
                     ),
                 )
                 conn.commit()
@@ -1758,7 +2082,7 @@ class KssHandler(SimpleHTTPRequestHandler):
                 raise e
             finally:
                 conn.close()
-            self.json_response(200, bootstrap())
+            self.json_response(200, {"message": "Customer application deleted.", **bootstrap()})
             return
 
         self.json_response(404, {"message": "API route not found."})

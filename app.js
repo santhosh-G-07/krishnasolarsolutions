@@ -354,13 +354,14 @@ const api = {
 async function init() {
   appState.currentUser = getSessionUser();
   bindCommon();
+  const page = document.body.dataset.page;
+  if (page === "auth") initAuthPage();
+
   await hydrate();
 
-  const page = document.body.dataset.page;
   if (page === "home") initHome();
   if (page === "services") initServicesPage();
   if (page === "products") initProductsPage();
-  if (page === "auth") initAuthPage();
   if (page === "apply") initApplyPage();
   if (page === "dashboard") initDashboardPage();
 }

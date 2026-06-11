@@ -2,7 +2,22 @@
   "name": "kss-website",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "start": "python server.py"
+    "start": "python server.py",
+    "dev": "vite --config vite.config.js",
+    "build": "vite build --config vite.config.js && node scripts/copy-static.mjs",
+    "preview": "vite preview --config vite.config.js",
+    "test:smoke": "node scripts/smoke.mjs",
+    "keepalive": "node scripts/keepalive.mjs"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.4.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "vite": "^6.3.5"
+  },
+  "devDependencies": {
+    "playwright": "^1.60.0"
   }
 }

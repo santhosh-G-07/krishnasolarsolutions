@@ -136,7 +136,7 @@ nav{
   <h1>Sign in to your <span>workspace.</span></h1>
   <p class="sub">For Krishna Solar Solutions team only. Employees and administrators sign in here.</p>
 
-  <form class="card" data-login-form id="staffForm">
+  <form class="card" data-login-form id="staffForm" method="post" action="/api/login">
     <input type="hidden" name="role" value="employee" id="roleInput"/>
 
     <div class="card-head">
